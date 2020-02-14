@@ -1,0 +1,43 @@
+//------------------------------------------------
+// file:    vprint.c
+// author:  (C) Maxim Olivier-Adlhoch
+//
+// date:    2009-11-06
+// version: 0.0.1
+// 
+// license: MIT (look in main folder for full license)
+//
+// purpose: a set of macros which define switchable, stacked tracing.
+//          when VDEBUG is set to false, all tracing disapears.
+//
+//------------------------------------------------
+
+#include "vprint.h"
+
+char verbose_indentation[verbose_array_size] = {0}; // = "";
+int verbose_indentations   =  0;
+
+
+int do_verbose = 0;
+int do_vlog    = 0;
+
+char *vlogpath = NULL;
+FILE *vlogfile = NULL; // if a file is setup for logging, vlogon will open it and assign the file pointer here.
+
+
+void update_verbose_indentations (){
+	//printf("%h", verbose_indentation);
+	if (verbose_indentations < 0){
+		printf("=================\nERROR!!! trace depth is negative!!!!\n reset to zero... fix sources to remove this warning.\n=================\n");
+		verbose_indentations = 0;
+	}
+	if (verbose_indentations * verbose_tabs  > (verbose_max_depth * verbose_tabs)) {
+		printf("ERROR!!! PAST VPRINT TRACE DEPTH ALLOWANCE\n application will quit after you press enter.");
+		//_getch();
+		exit(EXIT_FAILURE);
+	}
+	memset(verbose_indentation, ' ', (verbose_indentations * verbose_tabs));
+	verbose_indentation[verbose_indentations * verbose_tabs] = '\0';
+}
+
+
