@@ -2,8 +2,8 @@
 // file:    mold.c
 // author:  (C) Maxim Olivier-Adlhoch
 //
-// date:    2020-02-11
-// version: 1.0.0
+// date:    2020-02-14
+// version: 1.0.1
 //
 // license: APACHE v2.0
 //          https://www.apache.org/licenses/LICENSE-2.0
@@ -451,6 +451,78 @@ MoldValue *build_text_based_value(MoldValue *mv, const char *data){
 	return mv;
 }
 
+
+
+//--------------------------
+//-     mold_text()
+//--------------------------
+// purpose:  
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+mold_text(MoldValue *mv, char *buffer, int len, int indents ){
+	int sublen = 0;
+	int i=0;
+	char letter=0;
+	int safelen =0;
+	
+	vin("mold_text()");
+	safelen = len - 1;
+	
+	if (mv->text.buffer == NULL){
+		// we received a null string, so we'll return a none!
+		sublen = mold_none(mv, buffer, len, indents);
+	}else{
+		// two bytes are enough for an empty string
+		if (safelen >= 2){
+			buffer[0] = '{';
+			sublen ++;
+		
+			for(i=0; i < mv->text.len; i++){
+				letter = mv->text.buffer[i];
+				if (
+					   letter == '{'
+					|| letter == '}'
+					|| letter == '^'
+				){
+					// we need to escape the result
+					if (sublen < safelen){
+						buffer[sublen] = '^';
+						sublen++;
+					}
+				}
+				
+				if (sublen < safelen){
+					buffer[sublen] = letter;
+					sublen ++;
+				}
+			}
+			
+			if (sublen < safelen){
+				buffer[sublen] = '}';
+				sublen ++;
+			}
+			
+			
+			// sublen can NEVER be as large as len... it must reserve space for nul termination.
+			buffer[sublen] = 0;
+		}
+	}
+	vout;
+	return sublen;
+}
+
+
+
+
 //--------------------------
 //-     mold_word()
 //--------------------------
@@ -508,7 +580,7 @@ void *MoldMethods[ MOLD_ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	no_op_build, NULL, append_block, mold_block,
 
 	// MOLD_TEXT
-	build_text_based_value, NULL, NULL, NULL,
+	build_text_based_value, NULL, NULL, mold_text,
 
 	// MOLD_INT
 	no_op_build, NULL, NULL, NULL,

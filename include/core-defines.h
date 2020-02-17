@@ -8,7 +8,7 @@
 // license: APACHE v2.0 
 //          https://www.apache.org/licenses/LICENSE-2.0
 //
-// purpose: topic agnostic low level defines usable in any C source file.
+// purpose: project-agnostic low-level defines usable in any C source file, used by most other files in this repository.
 //------------------------------------------------
 
 //                                                                         .
@@ -19,4 +19,6 @@
 //-----------------------------------------------------------------------------------------------------------
 #define TRUE  1
 #define FALSE 0
+
+
 
