@@ -265,7 +265,8 @@ void *get_method( MoldValue *mv, int action ){
 //--------------------------
 MoldValue *no_op_build(
 	MoldValue *value,
-	void *data
+	void *data,
+	int owner = 0
 ){
 	vin("no_op_build()");
 	vnum(value->type);
@@ -331,7 +332,6 @@ MoldValue* append_block( MoldValue* block, MoldValue* value ){
 		block->child.tail->next = value;
 		block->child.tail = value;
 	}
-	
 	vout;
 	return block;
 }
@@ -420,7 +420,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 //--------------------------
 // purpose:  
 //
-// inputs:   
+// inputs:   owner is non-0 if we must copy the data. 0 if we should refer to it (and NOT deallocate it).
 //
 // returns:  
 //
@@ -430,24 +430,28 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 //
 // tests:    
 //--------------------------
-MoldValue *build_text_based_value(MoldValue *mv, const char *data){
+MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
 	int len=0;
 	char *buffer =NULL;
 	vin("build_text_based_value()");
 
 	if (is_text_based(mv)) {
 		len = strlen(data);
-		buffer = malloc(len + 1);
-		memcpy(buffer, data, len);
-		
-		// force null termination;
-		buffer[len] = 0;
-		
-		mv->text.buffer = buffer;
+		if (owner){
+			buffer = malloc(len + 1);
+			memcpy(buffer, data, len);
+			mv->owner = TRUE;
+			
+			// force null termination;
+			buffer[len] = 0;
+			mv->text.buffer = buffer;
+		}else{
+			mv->owner = FALSE;
+			mv->text.buffer = data;
+		}
 		mv->text.len = len;
 	}
 	vout;
-	
 	return mv;
 }
 
@@ -511,7 +515,6 @@ mold_text(MoldValue *mv, char *buffer, int len, int indents ){
 				sublen ++;
 			}
 			
-			
 			// sublen can NEVER be as large as len... it must reserve space for nul termination.
 			buffer[sublen] = 0;
 		}
@@ -570,7 +573,7 @@ void *MoldMethods[ MOLD_ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	//----------------
 	// action order:
 	//
-	// BUILD   CAST   APPEND   MOLD
+	// BUILD   CAST   APPEND   MOLD   DISMANTLE
 	//----------------
 	
 	// MOLD_NONE
@@ -642,7 +645,7 @@ MoldValue *make(int type){
 //--------------------------
 MoldValue *build(int type, void *data){
 	MoldValue *mv;
-	MoldValue *(*bldfunc)(MoldValue*, void *data);  // declare function pointer.
+	MoldValue *(*bldfunc)(MoldValue*, void *);  // declare function pointer.
 
 	vin("build()");
 	
@@ -654,7 +657,42 @@ MoldValue *build(int type, void *data){
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
-			mv = bldfunc(mv, data);
+			mv = bldfunc(mv, data, 1);
+		}
+	}
+	vout;
+
+	return mv;
+}
+
+
+//--------------------------
+//-     frame()
+//--------------------------
+// purpose:  build a MoldValue, but do not own the data (we refer to it and must not de-allocate)
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+frame(int type, void *data){
+	vin("frame()");
+	
+	mv = make(type);
+	vprint("%s", mold_type(mv));
+	
+	if (mv){
+		bldfunc = get_method(mv, MOLD_BUILD);
+		//vprint("got function!");
+		//vptr(bldfunc);
+		if (bldfunc){
+			mv = bldfunc(mv, data, 0);
 		}
 	}
 	vout;
@@ -734,6 +772,52 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 	return result;
 }
 
+
+
+
+//--------------------------
+//-     dismantle()
+//--------------------------
+// purpose:  free all the data within a mold value if it is owned and free the mold value itself.
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+void dismantle(MoldValue *mv){
+	vin("dismantle()");
+	
+	vout;
+}
+
+
+
+//--------------------------
+//-     load()
+//--------------------------
+// purpose:  given a piece of text, build a MoldValue with parsed data
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+MoldValue* load (char *text){
+	vin("load()");
+	
+	vout;
+}
 
 
 

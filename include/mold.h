@@ -44,10 +44,11 @@ enum MoldTypes {
 // action names and offsets, we use these to access methods in the MoldMethods array
 //--------------------------
 enum MoldActions {
-	MOLD_BUILD=0,
-	MOLD_CAST,
-	MOLD_APPEND,
-	MOLD_MOLD,
+	MOLD_BUILD=0,  // we are given native data to use to set internal data.
+	MOLD_CAST,     // convert ourself to another type. may free inner-data, doesn't allocate a new MoldValue.
+	               // return NULL if cast destination is not possible.
+	MOLD_APPEND,   // add data to ourself (may be impossible, in which case we return NULL).
+	MOLD_MOLD,     // output our data into a given char * buffer.
 	
 	//---
 	MOLD_ACTIONS_COUNT, // 4
@@ -57,7 +58,7 @@ enum MoldActions {
 //-                                                                                                       .
 //-----------------------------------------------------------------------------------------------------------
 //
-//- STRUCTS
+//- STRUCTS & ARRAYS
 //
 //-----------------------------------------------------------------------------------------------------------
 
@@ -75,7 +76,7 @@ extern void *MoldMethods[];
 
 
 //--------------------------
-//-     MoldValue: {...}
+//- MoldValue: {...}
 //
 // data cell for all Mold values.
 //--------------------------
@@ -85,7 +86,32 @@ struct MoldValue {
 	//--------------------------
 	//-     type:
 	//--------------------------
-	int			 type;
+	unsigned char type;
+
+	//--------------------------
+	//-     owner:
+	// 
+	// are we owner of current data?
+	//
+	// for some types which are references, we may need to de-allocated data on some actions...
+	// this indicates that we are owner of the data, so its our responsability to de-allocate when
+	// the data is not used anymore.
+	//--------------------------
+	unsigned char owner;
+
+	//--------------------------
+	//-     reserved1:
+	//
+	// may be used in future if we need extra specs
+	//--------------------------
+	unsigned char reserved1;
+
+	//--------------------------
+	//-     reserved2:
+	//
+	// may be used in future if we need extra specs
+	//--------------------------
+	unsigned char reserved2;
 
 	//--------------------------
 	//-     next:
@@ -98,6 +124,7 @@ struct MoldValue {
 		//-         value:
 		//--------------------------
 		int 		 value;
+		
 
 		//--------------------------
 		//-         text: {...}
@@ -208,6 +235,12 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents);
 //-     append()
 //--------------------------
 MoldValue *append(MoldValue* series, MoldValue* value);
+
+
+//--------------------------
+//-     load()
+//--------------------------
+MoldValue* load (char *text);
 
 
 //-                                                                                                       .
