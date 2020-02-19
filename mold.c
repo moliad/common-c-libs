@@ -17,6 +17,7 @@
 
 #define VERBOSE
 #include "vprint.h"
+#include "core-defines.h"
 
 //-                                                                                                       .
 //-----------------------------------------------------------------------------------------------------------
@@ -266,7 +267,7 @@ void *get_method( MoldValue *mv, int action ){
 MoldValue *no_op_build(
 	MoldValue *value,
 	void *data,
-	int owner = 0
+	int owner
 ){
 	vin("no_op_build()");
 	vnum(value->type);
@@ -356,7 +357,6 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 	//int result=0;
 	int sublen=0;
 	MoldValue* subvalue;
-	int i=0;
 	
 	vin("mold_block()");
 	
@@ -382,7 +382,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 							++ sublen;
 						}
 					}
-				} 
+				}
 				while(subvalue);
 			}
 			if ( (sublen + 1) < len ){
@@ -472,7 +472,7 @@ MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
 //
 // tests:    
 //--------------------------
-mold_text(MoldValue *mv, char *buffer, int len, int indents ){
+int mold_text(MoldValue *mv, char *buffer, int len, int indents ){
 	int sublen = 0;
 	int i=0;
 	char letter=0;
@@ -645,7 +645,7 @@ MoldValue *make(int type){
 //--------------------------
 MoldValue *build(int type, void *data){
 	MoldValue *mv;
-	MoldValue *(*bldfunc)(MoldValue*, void *);  // declare function pointer.
+	MoldValue *(*bldfunc)(MoldValue*, void *, int);  // declare function pointer.
 
 	vin("build()");
 	
@@ -681,7 +681,10 @@ MoldValue *build(int type, void *data){
 //
 // tests:    
 //--------------------------
-frame(int type, void *data){
+MoldValue *frame(int type, void *data){
+	MoldValue *mv;
+	MoldValue *(*bldfunc)(MoldValue*, void *, int);  // declare function pointer.
+
 	vin("frame()");
 	
 	mv = make(type);
@@ -817,6 +820,7 @@ MoldValue* load (char *text){
 	vin("load()");
 	
 	vout;
+	return NULL;
 }
 
 

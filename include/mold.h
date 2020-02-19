@@ -133,14 +133,13 @@ struct MoldValue {
 			//--------------------------
 			//-             buffer:
 			//
-			// note that any data stored in buffer is ALWAYS
-			// allocated via build. so there is never a reference
-			// to data owned by code outside the MoldValue itself.
+			// the MolvValue.owner value above will determine if we need to
+			// free the buffer on any call to dismantle.
 			//
-			// when MoldValue is destroyed, this buffer is always
-			// freed.
+			// if we are not the owner, then we just forget about the buffer
+			// and assume an external piece of code is responsible for its memory.
 			//--------------------------
-			char *buffer;
+			const char *buffer;
 			
 			//--------------------------
 			//-             len:
