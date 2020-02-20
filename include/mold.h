@@ -29,7 +29,7 @@ enum MoldTypes {
 	MOLD_INT,
 	MOLD_WORD,
 	MOLD_SET_WORD,
-	
+
 	//----
 	// we use this to allocate method arrays.
 	MOLD_TYPE_COUNT, // 6
@@ -44,14 +44,14 @@ enum MoldTypes {
 // action names and offsets, we use these to access methods in the MoldMethods array
 //--------------------------
 enum MoldActions {
-	MOLD_BUILD=0,  // we are given native data to use to set internal data.
-	MOLD_CAST,     // convert ourself to another type. may free inner-data, doesn't allocate a new MoldValue.
+	ACTION_BUILD=0,  // we are given native data to use to set internal data.
+	ACTION_CAST,     // convert ourself to another type. may free inner-data, doesn't allocate a new MoldValue.
 	               // return NULL if cast destination is not possible.
-	MOLD_APPEND,   // add data to ourself (may be impossible, in which case we return NULL).
-	MOLD_MOLD,     // output our data into a given char * buffer.
-	
+	ACTION_APPEND,    // add data to ourself (may be impossible, in which case we return NULL).
+	ACTION_MOLD,      // output our data into a given char * buffer.
+	ACTION_DISMANTLE, // free memory.
 	//---
-	MOLD_ACTIONS_COUNT, // 4
+	ACTIONS_COUNT, // 4
 };
 
 
@@ -90,7 +90,7 @@ struct MoldValue {
 
 	//--------------------------
 	//-     owner:
-	// 
+	//
 	// are we owner of current data?
 	//
 	// for some types which are references, we may need to de-allocated data on some actions...
@@ -124,7 +124,7 @@ struct MoldValue {
 		//-         value:
 		//--------------------------
 		int 		 value;
-		
+
 
 		//--------------------------
 		//-         text: {...}
@@ -140,7 +140,7 @@ struct MoldValue {
 			// and assume an external piece of code is responsible for its memory.
 			//--------------------------
 			const char *buffer;
-			
+
 			//--------------------------
 			//-             len:
 			//
@@ -159,7 +159,7 @@ struct MoldValue {
 			//-             head:
 			//--------------------------
 			MoldValue	*head; // note head and tail CAN be the same value (they can also both be NULL)
-			
+
 			//--------------------------
 			//-             tail:
 			//--------------------------
@@ -216,16 +216,16 @@ MoldValue *build(int type, void *data);
 //--------------------------
 // purpose:  converts the given value to a string within the given buffer.
 //
-// inputs:   
+// inputs:
 //
 // returns:  number of chars appended to buffer (always bound by given buffer_size)
 //
 // notes:    - before calling mold, be sure to increase pointer to buffer and decrease buffer_size as you call mold on a list of values.
 //           - mold is safe for use recursively (we supply all contextual values on stack).
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 int mold(MoldValue *value, char *buffer, int buffer_size, int indents);
 

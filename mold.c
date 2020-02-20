@@ -18,6 +18,7 @@
 #define VERBOSE
 #include "vprint.h"
 #include "core-defines.h"
+#include "clibs_cast.h"
 
 //-                                                                                                       .
 //-----------------------------------------------------------------------------------------------------------
@@ -28,6 +29,7 @@
 
 int iii = 66;
 
+int allocated_values = 0;
 //--------------------------
 //- __mvptr:
 //
@@ -251,14 +253,14 @@ void *get_method( MoldValue *mv, int action ){
 	//vnum(action);
 	//vnum(mv->type);
 
-	if (action > MOLD_ACTIONS_COUNT){
+	if (action > ACTIONS_COUNT){
 		vprint("get_method() ERROR!! invalid action %i", action);
 	}else{
 		if (mv->type > MOLD_TYPE_COUNT){
 			vprint ("get_method() ERROR!! invalid Mold value");
 		}else{
 
-			i = (mv->type * MOLD_ACTIONS_COUNT) + action;
+			i = (mv->type * ACTIONS_COUNT) + action;
 			func = MoldMethods[ i ];
 		}
 	}
@@ -448,7 +450,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 //
 // inputs:
 //
-// returns:  length of int
+// returns:  length of text (without nul termination)
 //
 // notes:
 //
@@ -456,14 +458,13 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 //
 // tests:
 //--------------------------
-int mold_int(MoldValue *value, char *buffer, int len, int indents ){
+int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
 	int result=0;
+
 	vin("mold_int()");
-	if (len > 7){
-		memcpy(buffer, "#[none]", 7);
-		buffer[7]=0;
-		result = 7;
-	}
+
+	result = i32_to_charptr(mv->value, buffer, len);
+
 	vnum(result);
 	vout;
 	return result;
@@ -651,7 +652,7 @@ int mold_set_word(MoldValue *mv, char *buffer, int len, int indents){
 //--------------------------
 //-     MoldMethods:
 //--------------------------
-void *MoldMethods[ MOLD_ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
+void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	//----------------
 	// action order:
 	//
@@ -659,22 +660,22 @@ void *MoldMethods[ MOLD_ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	//----------------
 
 	// MOLD_NONE
-	no_op_build, NULL, NULL, mold_none,
+	no_op_build, NULL, NULL, mold_none, NULL,
 
 	// MOLD_BLOCK
-	no_op_build, NULL, append_block, mold_block,
+	no_op_build, NULL, append_block, mold_block, NULL,
 
 	// MOLD_TEXT
-	build_text_based_value, NULL, NULL, mold_text,
+	build_text_based_value, NULL, NULL, mold_text, NULL,
 
 	// MOLD_INT
-	build_int_value, NULL, NULL, mold_int,
+	build_int_value, NULL, NULL, mold_int, NULL,
 
 	// MOLD_WORD
-	build_text_based_value, NULL, NULL, mold_word,
+	build_text_based_value, NULL, NULL, mold_word, NULL,
 
 	// MOLD_SET_WORD
-	build_text_based_value, NULL, NULL, mold_set_word,
+	build_text_based_value, NULL, NULL, mold_set_word, NULL,
 };
 
 
@@ -701,6 +702,7 @@ MoldValue *make(int type){
 		mvptr->type = type;
 	}
 	vprint("%s = %p ", mold_type(mvptr), mvptr );
+	++allocated_values;
 	vout;
 
 	return mvptr;
@@ -735,7 +737,7 @@ MoldValue *build(int type, void *data){
 	vprint("%s", mold_type(mv));
 
 	if (mv){
-		bldfunc = get_method(mv, MOLD_BUILD);
+		bldfunc = get_method(mv, ACTION_BUILD);
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
@@ -773,7 +775,7 @@ MoldValue *frame(int type, void *data){
 	vprint("%s", mold_type(mv));
 
 	if (mv){
-		bldfunc = get_method(mv, MOLD_BUILD);
+		bldfunc = get_method(mv, ACTION_BUILD);
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
@@ -814,7 +816,7 @@ MoldValue *append(MoldValue* series, MoldValue* value){
 	if (value && series){
 		if (is_series(series)) {
 
-			if ((appendfunc = get_method(series, MOLD_APPEND))){
+			if ((appendfunc = get_method(series, ACTION_APPEND))){
 				appendfunc(series, value);
 			}
 		}
@@ -847,7 +849,7 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 	//vin("mold()");
 
 	//vptr(value);
-	moldfunc = get_method(value, MOLD_MOLD);
+	moldfunc = get_method(value, ACTION_MOLD);
 
 	if (moldfunc){
 		result = moldfunc(value, buffer, buffer_size, indents);
