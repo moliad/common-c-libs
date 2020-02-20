@@ -18,6 +18,7 @@
 #define VERBOSE
 #include "vprint.h"
 #include "core-defines.h"
+#include "clibs_cast.h"
 
 //-                                                                                                       .
 //-----------------------------------------------------------------------------------------------------------
@@ -28,6 +29,7 @@
 
 int iii = 66;
 
+int allocated_values = 0;
 //--------------------------
 //- __mvptr:
 //
@@ -90,19 +92,19 @@ int is_series(MoldValue* mv){
 //--------------------------
 // purpose:  determine if a mold value is based on a char * value set within text attribute.
 //
-// inputs:   
+// inputs:
 //
-// returns:  
+// returns:
 //
-// notes:    
+// notes:
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 int is_text_based(MoldValue *mv){
 	int result=0;
-	
+
 	vin("is_text_based()");
 	switch (mv->type){
 		case MOLD_TEXT:
@@ -114,6 +116,32 @@ int is_text_based(MoldValue *mv){
 			result=0;
 			break;
 	}
+	vout;
+	return result;
+}
+
+
+//--------------------------
+//-     is_int()
+//--------------------------
+// purpose:  determine if a mold value is based on an int * value.
+//
+// inputs:
+//
+// returns:
+//
+// notes:
+//
+// to do:
+//
+// tests:
+//--------------------------
+int is_int(MoldValue *mv){
+	int result=0;
+
+	vin("is_int()");
+	result = (mv->type == MOLD_INT);
+
 	vout;
 	return result;
 }
@@ -149,20 +177,20 @@ char* probe(MoldValue* value){
 //--------------------------
 // purpose:  dumps the type of a moldvalue to stdout.
 //
-// inputs:   
+// inputs:
 //
-// returns:  
+// returns:
 //
-// notes:    
+// notes:
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 const char *mold_type(MoldValue* mv){
 	//vin("mold_type()");
 	char *str="Invalid!";
-	
+
 	if (mv){
 		switch(mv->type){
 			case MOLD_NONE:
@@ -188,7 +216,7 @@ const char *mold_type(MoldValue* mv){
 				break;
 		}
 	}
-	
+
 	//vout;
 	return str;
 }
@@ -198,7 +226,7 @@ const char *mold_type(MoldValue* mv){
 //-     mold_indents()
 //--------------------------
 int mold_indents(char *buffer, int len, int indents){
-	int i=0;	
+	int i=0;
 	//vin("mold_indents()");
 	for(i=0; i<(indents * 4); i++){
 		if (i < len){
@@ -219,25 +247,25 @@ int mold_indents(char *buffer, int len, int indents){
 void *get_method( MoldValue *mv, int action ){
 	void *func=NULL;
 	int i=0;
-	
+
 	//vin("get_method()");
-	
+
 	//vnum(action);
 	//vnum(mv->type);
-	
-	if (action > MOLD_ACTIONS_COUNT){
+
+	if (action > ACTIONS_COUNT){
 		vprint("get_method() ERROR!! invalid action %i", action);
 	}else{
 		if (mv->type > MOLD_TYPE_COUNT){
 			vprint ("get_method() ERROR!! invalid Mold value");
 		}else{
-			
-			i = (mv->type * MOLD_ACTIONS_COUNT) + action;
+
+			i = (mv->type * ACTIONS_COUNT) + action;
 			func = MoldMethods[ i ];
 		}
 	}
 	//vout;
-	
+
 	return func;
 }
 
@@ -312,17 +340,17 @@ int mold_none(MoldValue *value, char *buffer, int len, int indents ){
 //--------------------------
 //-     append_block()
 //--------------------------
-// purpose:  
+// purpose:
 //
-// inputs:   
+// inputs:
 //
-// returns:  
+// returns:
 //
-// notes:    
+// notes:
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 MoldValue* append_block( MoldValue* block, MoldValue* value ){
 	vin("append_block()");
@@ -357,9 +385,9 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 	//int result=0;
 	int sublen=0;
 	MoldValue* subvalue;
-	
+
 	vin("mold_block()");
-	
+
 	// make sure we get proper arguments.
 	if ((len > 0) && (buffer != NULL)){
 
@@ -416,19 +444,47 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 
 
 //--------------------------
+//-     mold_int()
+//--------------------------
+// purpose:
+//
+// inputs:
+//
+// returns:  length of text (without nul termination)
+//
+// notes:
+//
+// to do:
+//
+// tests:
+//--------------------------
+int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
+	int result=0;
+
+	vin("mold_int()");
+
+	result = i32_to_charptr(mv->value, buffer, len);
+
+	vnum(result);
+	vout;
+	return result;
+}
+
+
+//--------------------------
 //-     build_text_based_value()
 //--------------------------
-// purpose:  
+// purpose:
 //
 // inputs:   owner is non-0 if we must copy the data. 0 if we should refer to it (and NOT deallocate it).
 //
-// returns:  
+// returns:
 //
 // notes:    If given data is not a null-terminated string, this function will corrupt application.
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
 	int len=0;
@@ -441,7 +497,7 @@ MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
 			buffer = malloc(len + 1);
 			memcpy(buffer, data, len);
 			mv->owner = TRUE;
-			
+
 			// force null termination;
 			buffer[len] = 0;
 			mv->text.buffer = buffer;
@@ -456,31 +512,58 @@ MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
 }
 
 
+//--------------------------
+//-     build_int_value()
+//--------------------------
+// purpose:
+//
+// inputs:   owner is non-0 if we must copy the data. 0 if we should refer to it (and NOT deallocate it).
+//
+// returns:
+//
+// notes:
+//
+// to do:
+//
+// tests:
+//--------------------------
+MoldValue *build_int_value(MoldValue *mv, int *data, int owner){
+	int len=0;
+	char *buffer =NULL;
+	vin("build_int_value()");
+
+	if (is_int(mv)) {
+		mv->value = *data;
+	}
+	vout;
+	return mv;
+}
+
 
 //--------------------------
 //-     mold_text()
 //--------------------------
-// purpose:  
+// purpose:
 //
-// inputs:   
+// inputs:
 //
-// returns:  
+// returns:
 //
-// notes:    
+// notes:
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 int mold_text(MoldValue *mv, char *buffer, int len, int indents ){
 	int sublen = 0;
 	int i=0;
 	char letter=0;
 	int safelen =0;
-	
+
 	vin("mold_text()");
 	safelen = len - 1;
-	
+
 	if (mv->text.buffer == NULL){
 		// we received a null string, so we'll return a none!
 		sublen = mold_none(mv, buffer, len, indents);
@@ -489,7 +572,7 @@ int mold_text(MoldValue *mv, char *buffer, int len, int indents ){
 		if (safelen >= 2){
 			buffer[0] = '{';
 			sublen ++;
-		
+
 			for(i=0; i < mv->text.len; i++){
 				letter = mv->text.buffer[i];
 				if (
@@ -503,18 +586,18 @@ int mold_text(MoldValue *mv, char *buffer, int len, int indents ){
 						sublen++;
 					}
 				}
-				
+
 				if (sublen < safelen){
 					buffer[sublen] = letter;
 					sublen ++;
 				}
 			}
-			
+
 			if (sublen < safelen){
 				buffer[sublen] = '}';
 				sublen ++;
 			}
-			
+
 			// sublen can NEVER be as large as len... it must reserve space for nul termination.
 			buffer[sublen] = 0;
 		}
@@ -569,30 +652,30 @@ int mold_set_word(MoldValue *mv, char *buffer, int len, int indents){
 //--------------------------
 //-     MoldMethods:
 //--------------------------
-void *MoldMethods[ MOLD_ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
+void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	//----------------
 	// action order:
 	//
 	// BUILD   CAST   APPEND   MOLD   DISMANTLE
 	//----------------
-	
+
 	// MOLD_NONE
-	no_op_build, NULL, NULL, mold_none,
+	no_op_build, NULL, NULL, mold_none, NULL,
 
 	// MOLD_BLOCK
-	no_op_build, NULL, append_block, mold_block,
+	no_op_build, NULL, append_block, mold_block, NULL,
 
 	// MOLD_TEXT
-	build_text_based_value, NULL, NULL, mold_text,
+	build_text_based_value, NULL, NULL, mold_text, NULL,
 
 	// MOLD_INT
-	no_op_build, NULL, NULL, NULL,
-	
+	build_int_value, NULL, NULL, mold_int, NULL,
+
 	// MOLD_WORD
-	build_text_based_value, NULL, NULL, mold_word,
+	build_text_based_value, NULL, NULL, mold_word, NULL,
 
 	// MOLD_SET_WORD
-	build_text_based_value, NULL, NULL, mold_set_word,
+	build_text_based_value, NULL, NULL, mold_set_word, NULL,
 };
 
 
@@ -619,6 +702,7 @@ MoldValue *make(int type){
 		mvptr->type = type;
 	}
 	vprint("%s = %p ", mold_type(mvptr), mvptr );
+	++allocated_values;
 	vout;
 
 	return mvptr;
@@ -648,12 +732,12 @@ MoldValue *build(int type, void *data){
 	MoldValue *(*bldfunc)(MoldValue*, void *, int);  // declare function pointer.
 
 	vin("build()");
-	
+
 	mv = make(type);
 	vprint("%s", mold_type(mv));
-	
+
 	if (mv){
-		bldfunc = get_method(mv, MOLD_BUILD);
+		bldfunc = get_method(mv, ACTION_BUILD);
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
@@ -671,27 +755,27 @@ MoldValue *build(int type, void *data){
 //--------------------------
 // purpose:  build a MoldValue, but do not own the data (we refer to it and must not de-allocate)
 //
-// inputs:   
+// inputs:
 //
-// returns:  
+// returns:
 //
-// notes:    
+// notes:
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 MoldValue *frame(int type, void *data){
 	MoldValue *mv;
 	MoldValue *(*bldfunc)(MoldValue*, void *, int);  // declare function pointer.
 
 	vin("frame()");
-	
+
 	mv = make(type);
 	vprint("%s", mold_type(mv));
-	
+
 	if (mv){
-		bldfunc = get_method(mv, MOLD_BUILD);
+		bldfunc = get_method(mv, ACTION_BUILD);
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
@@ -724,15 +808,15 @@ MoldValue *append(MoldValue* series, MoldValue* value){
 	MoldValue *result = NULL;
 
 	MoldValue*(* appendfunc)(MoldValue*, MoldValue*);
-	
-	
+
+
 	//vin("append()");
 
 	//vprint("appending value %p to series %p",value, series);
 	if (value && series){
 		if (is_series(series)) {
-			
-			if ((appendfunc = get_method(series, MOLD_APPEND))){
+
+			if ((appendfunc = get_method(series, ACTION_APPEND))){
 				appendfunc(series, value);
 			}
 		}
@@ -761,16 +845,16 @@ MoldValue *append(MoldValue* series, MoldValue* value){
 int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 	int result=0;
 	int (*moldfunc)(MoldValue*, char*, int, int);  // declare function pointer.
-	
+
 	//vin("mold()");
-	
+
 	//vptr(value);
-	moldfunc = get_method(value, MOLD_MOLD);
-	
+	moldfunc = get_method(value, ACTION_MOLD);
+
 	if (moldfunc){
 		result = moldfunc(value, buffer, buffer_size, indents);
 	}
-	
+
 	//vout;
 	return result;
 }
@@ -783,19 +867,19 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 //--------------------------
 // purpose:  free all the data within a mold value if it is owned and free the mold value itself.
 //
-// inputs:   
+// inputs:
 //
-// returns:  
+// returns:
 //
-// notes:    
+// notes:
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 void dismantle(MoldValue *mv){
 	vin("dismantle()");
-	
+
 	vout;
 }
 
@@ -806,19 +890,19 @@ void dismantle(MoldValue *mv){
 //--------------------------
 // purpose:  given a piece of text, build a MoldValue with parsed data
 //
-// inputs:   
+// inputs:
 //
-// returns:  
+// returns:
 //
-// notes:    
+// notes:
 //
-// to do:    
+// to do:
 //
-// tests:    
+// tests:
 //--------------------------
 MoldValue* load (char *text){
 	vin("load()");
-	
+
 	vout;
 	return NULL;
 }
