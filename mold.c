@@ -358,6 +358,41 @@ MoldValue* append_block( MoldValue* block, MoldValue* value ){
 
 
 //--------------------------
+//-     dismantle_text_based_value()
+//--------------------------
+// purpose:
+//
+// inputs:
+//
+// returns:
+//
+// notes:
+//
+// to do:
+//
+// tests:
+//--------------------------
+void dismantle_text_based_value( MoldValue* mv){
+	MoldValue* temp;
+	vin("dismantle_text_based_value()");
+	if (mv->owner == TRUE){
+		if (mv->child.head != 0){
+			while (mv->child.tail != 0){
+				temp = mv->child.tail->next;
+				free(mv->child.head);
+			}
+			if (temp != 0){
+				free(temp);
+			}
+		}
+		free(mv);
+	}
+
+	vout;
+	return;
+}
+
+//--------------------------
 //-     mold_block()
 //--------------------------
 // purpose:
@@ -703,20 +738,20 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	no_op_build, NULL, append_block, mold_block, NULL,
 
 	// MOLD_TEXT
-	build_text_based_value, NULL, NULL, mold_text, NULL,
+	build_text_based_value, NULL, NULL, mold_text, dismantle_text_based_value,
 
 	// MOLD_INT
 	build_int_value, NULL, NULL, mold_int, NULL,
 
 	// MOLD_WORD
-	build_text_based_value, NULL, NULL, mold_word, NULL,
+	build_text_based_value, NULL, NULL, mold_word, dismantle_text_based_value,
 
 	// MOLD_SET_WORD
-	build_text_based_value, NULL, NULL, mold_set_word, NULL,
-	
+	build_text_based_value, NULL, NULL, mold_set_word, dismantle_text_based_value,
+
 	// MOLD_LITERAL
-	build_text_based_value, NULL, NULL, mold_word, NULL,
-	
+	build_text_based_value, NULL, NULL, mold_word, dismantle_text_based_value,
+
 	// MOLD_DECIMAL
 	no_op_build, NULL, NULL, mold_decimal, NULL,
 	
@@ -921,10 +956,19 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 //
 // tests:
 //--------------------------
-void dismantle(MoldValue *mv){
-	vin("dismantle()");
+int dismantle(MoldValue *mv){
+	int result = 0;
+	int (*moldfunc)(MoldValue*);  // declare function pointer.
 
-	vout;
+	//vin("dismantle()");
+
+	moldfunc = get_method(mv, ACTION_DISMANTLE);
+
+	if (moldfunc){
+		result = moldfunc(mv);
+	}
+	//vout;
+	return result;
 }
 
 
