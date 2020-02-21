@@ -103,11 +103,12 @@ struct MoldValue {
 	unsigned char owner;
 
 	//--------------------------
-	//-     reserved1:
+	//-     newline:
 	//
-	// may be used in future if we need extra specs
+	// do we add a newline after this value while molding?
+	// doesn't affect block types, which always add a newline
 	//--------------------------
-	unsigned char reserved1;
+	unsigned char newline;
 
 	//--------------------------
 	//-     reserved2:
@@ -127,7 +128,6 @@ struct MoldValue {
 		//-         value:
 		//--------------------------
 		int 		 value;
-
 
 		//--------------------------
 		//-         text: {...}
@@ -243,6 +243,17 @@ MoldValue *append(MoldValue* series, MoldValue* value);
 //-     load()
 //--------------------------
 MoldValue* load (char *text);
+
+
+//--------------------------
+//-     dismantle()
+//--------------------------
+void dismantle(MoldValue *mv);
+
+//--------------------------
+//-     dismantle_list()
+//--------------------------
+int dismantle_list(MoldValue *mv);
 
 
 //-                                                                                                       .

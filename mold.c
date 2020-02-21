@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define VERBOSE
+//#define VERBOSE
 #include "vprint.h"
 #include "core-defines.h"
 #include "clibs_cast.h"
@@ -328,6 +328,8 @@ int mold_none(MoldValue *value, char *buffer, int len, int indents ){
 }
 
 
+
+//-     -- BLOCK --
 //--------------------------
 //-     append_block()
 //--------------------------
@@ -356,42 +358,6 @@ MoldValue* append_block( MoldValue* block, MoldValue* value ){
 	return block;
 }
 
-
-//--------------------------
-//-     dismantle_text_based_value()
-//--------------------------
-// purpose:
-//
-// inputs:
-//
-// returns:
-//
-// notes:
-//
-// to do:
-//
-// tests:
-//--------------------------
-void dismantle_text_based_value( MoldValue* mv){
-	MoldValue* temp;
-	vin("dismantle_text_based_value()");
-	if (mv->owner == TRUE){
-		if (mv->child.head != 0){
-			while (mv->child.tail != 0){
-				temp = mv->child.tail->next;
-				free(mv->child.head);
-			}
-			if (temp != 0){
-				free(temp);
-			}
-		}
-		free(mv);
-	}
-
-	vout;
-	return;
-}
-
 //--------------------------
 //-     mold_block()
 //--------------------------
@@ -411,6 +377,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 	//int result=0;
 	int sublen=0;
 	MoldValue* subvalue;
+	int newline = FALSE;
 
 	vin("mold_block()");
 
@@ -429,12 +396,34 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 					sublen += mold(subvalue, buffer + sublen, len - sublen, indents );
 
 					// add a space if there is another item to mold.
+					//---------------------
+					// handle newline flag...
+					//---------------------
+					newline= subvalue->newline;
+					if (newline) {
+						if (subvalue->next){
+							if ( subvalue->type != MOLD_BLOCK &&  sublen < len){
+								buffer[sublen] = '\n';
+								++sublen;
+							}
+						}
+					}
+					if (subvalue->type == MOLD_BLOCK){
+						newline = TRUE;
+					}
+					if(newline){
+						sublen += mold_indents(buffer + sublen, len - sublen, indents);
+					}
 					subvalue = subvalue->next;
-					if (subvalue) {
+					if (subvalue && ! newline) {
+						//---------------------
+						// just add a space, if we didn't already add a newline
+						//---------------------
 						if ( (sublen + 1) < len ){
 							buffer[sublen] = ' ';
 							++ sublen;
 						}
+						
 					}
 				}
 				while(subvalue);
@@ -470,6 +459,64 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 
 
 //--------------------------
+//-     dismantle_block()
+//--------------------------
+// purpose:  free the inner (child) list of the block
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    doesn't free the list which THIS Mold value is part of.
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+void dismantle_block(MoldValue *mv){
+	int count;
+	vin("dismantle_block()");
+	if (mv->child.head){
+		count = dismantle_list(mv->child.head);
+		mv->child.head = NULL;
+		mv->child.tail = NULL;
+		vnum(count);
+	}
+
+	vout;
+}
+
+
+
+
+//-     -- INT --
+//--------------------------
+//-     build_int_value()
+//--------------------------
+// purpose:
+//
+// inputs:   owner is non-0 if we must copy the data. 0 if we should refer to it (and NOT deallocate it).
+//
+// returns:
+//
+// notes:
+//
+// to do:
+//
+// tests:
+//--------------------------
+MoldValue *build_int_value(MoldValue *mv, int *data, int owner){
+	vin("build_int_value()");
+
+	if (is_int(mv)) {
+		mv->value = *data;
+	}
+	vout;
+	return mv;
+}
+
+
+//--------------------------
 //-     mold_int()
 //--------------------------
 // purpose:
@@ -491,9 +538,11 @@ int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
 	sublen = i32_to_charptr(mv->value, buffer, len);
 	
 	// we must null terminate since the cast functions do not.
+	// but we do not advance the len, since it would truncate in the middle...
+	// the null termination is just a precaution.
 	if (sublen < len){
 		buffer[sublen] = 0;
-		sublen ++;
+		//sublen ++;
 	}else{
 		// not enough space to null terminate string... so its an error.
 		sublen = 0;
@@ -505,46 +554,7 @@ int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
 }
 
 
-
-//--------------------------
-//- mold_decimal()
-//--------------------------
-// purpose:  
-//
-// inputs:   
-//
-// returns:  
-//
-// notes:    
-//
-// to do:    
-//
-// tests:    
-//--------------------------
-int mold_decimal(MoldValue *mv, char *buffer, int len, int indents ){
-	int sublen=0;
-	
-	vin("mold_decimal()");
-	sublen = double_to_charptr(mv->decimal, 8, buffer, len );
-
-	// we must null terminate since the cast functions do not.
-	if (sublen < len){
-		buffer[sublen] = 0;
-		sublen ++;
-	}else{
-		// not enough space to null terminate string... so its an error.
-		sublen = 0;
-	}
-
-	vnum(sublen);
-	vout;
-	
-	return sublen;
-}
-
-
-
-
+//-     -- TEXT --
 //--------------------------
 //-     build_text_based_value()
 //--------------------------
@@ -580,32 +590,6 @@ MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
 			mv->text.buffer = data;
 		}
 		mv->text.len = len;
-	}
-	vout;
-	return mv;
-}
-
-
-//--------------------------
-//-     build_int_value()
-//--------------------------
-// purpose:
-//
-// inputs:   owner is non-0 if we must copy the data. 0 if we should refer to it (and NOT deallocate it).
-//
-// returns:
-//
-// notes:
-//
-// to do:
-//
-// tests:
-//--------------------------
-MoldValue *build_int_value(MoldValue *mv, int *data, int owner){
-	vin("build_int_value()");
-
-	if (is_int(mv)) {
-		mv->value = *data;
 	}
 	vout;
 	return mv;
@@ -679,8 +663,32 @@ int mold_text(MoldValue *mv, char *buffer, int len, int indents ){
 }
 
 
+//--------------------------
+//-     dismantle_text_based_value()
+//--------------------------
+// purpose:
+//
+// inputs:
+//
+// returns:
+//
+// notes:
+//
+// to do:
+//
+// tests:
+//--------------------------
+void dismantle_text_based_value( MoldValue* mv){
+	vin("dismantle_text_based_value()");
+	if(mv->owner){
+		free(mv->text.buffer);
+	}
+	vout;
+}
 
 
+
+//-     -- WORD --
 //--------------------------
 //-     mold_word()
 //--------------------------
@@ -709,6 +717,45 @@ int mold_set_word(MoldValue *mv, char *buffer, int len, int indents){
 }
 
 
+//-     -- DECIMAL --
+//--------------------------
+//-     mold_decimal()
+//--------------------------
+// purpose:  
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+int mold_decimal(MoldValue *mv, char *buffer, int len, int indents ){
+	int sublen=0;
+	
+	vin("mold_decimal()");
+	sublen = double_to_charptr(mv->decimal, 8, buffer, len );
+
+	// we must null terminate since the cast functions do not.
+	if (sublen < len){
+		buffer[sublen] = 0;
+		sublen ++;
+	}else{
+		// not enough space to null terminate string... so its an error.
+		sublen = 0;
+	}
+
+	vnum(sublen);
+	vout;
+	
+	return sublen;
+}
+
+
+
 
 
 
@@ -735,7 +782,7 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	no_op_build, NULL, NULL, mold_none, NULL,
 
 	// MOLD_BLOCK
-	no_op_build, NULL, append_block, mold_block, NULL,
+	no_op_build, NULL, append_block, mold_block, dismantle_block,
 
 	// MOLD_TEXT
 	build_text_based_value, NULL, NULL, mold_text, dismantle_text_based_value,
@@ -772,19 +819,19 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 // purpose:  allocate and setup an empty or null MoldValue
 //--------------------------
 MoldValue *make(int type){
-	MoldValue *mvptr;
+	MoldValue *mv;
 
 	vin("make()");
-	mvptr=calloc(1, sizeof(MoldValue) );
+	mv=calloc(1, sizeof(MoldValue) );
 
-	if(mvptr != NULL) {
-		mvptr->type = type;
+	if(mv != NULL) {
+		mv->type = type;
 	}
-	vprint("%s = %p ", mold_type(mvptr), mvptr );
+	vprint("%s = %p ", mold_type(mv), mv );
 	++allocated_values;
 	vout;
 
-	return mvptr;
+	return mv;
 }
 
 
@@ -795,16 +842,6 @@ MoldValue *make(int type){
 //-     build()
 //--------------------------
 // purpose:  create and initialise a mold value with some data
-//
-// inputs:
-//
-// returns:
-//
-// notes:
-//
-// to do:
-//
-// tests:
 //--------------------------
 MoldValue *build(int type, void *data){
 	MoldValue *mv;
@@ -833,16 +870,6 @@ MoldValue *build(int type, void *data){
 //-     frame()
 //--------------------------
 // purpose:  build a MoldValue, but do not own the data (we refer to it and must not de-allocate)
-//
-// inputs:
-//
-// returns:
-//
-// notes:
-//
-// to do:
-//
-// tests:
 //--------------------------
 MoldValue *frame(int type, void *data){
 	MoldValue *mv;
@@ -885,12 +912,9 @@ MoldValue *frame(int type, void *data){
 //--------------------------
 MoldValue *append(MoldValue* series, MoldValue* value){
 	MoldValue *result = NULL;
-
 	MoldValue*(* appendfunc)(MoldValue*, MoldValue*);
-
-
+	
 	//vin("append()");
-
 	//vprint("appending value %p to series %p",value, series);
 	if (value && series){
 		if (is_series(series)) {
@@ -903,6 +927,7 @@ MoldValue *append(MoldValue* series, MoldValue* value){
 	//vout;
 	return result;
 }
+
 
 
 //--------------------------
@@ -933,6 +958,7 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 	if (moldfunc){
 		result = moldfunc(value, buffer, buffer_size, indents);
 	}
+	
 
 	//vout;
 	return result;
@@ -956,21 +982,54 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 //
 // tests:
 //--------------------------
-int dismantle(MoldValue *mv){
+void dismantle(MoldValue *mv){
 	int result = 0;
-	int (*moldfunc)(MoldValue*);  // declare function pointer.
+	void (*dismantlefunc)(MoldValue*);  // declare function pointer.
 
-	//vin("dismantle()");
+	vin("dismantle()");
 
-	moldfunc = get_method(mv, ACTION_DISMANTLE);
+	dismantlefunc = get_method(mv, ACTION_DISMANTLE);
 
-	if (moldfunc){
-		result = moldfunc(mv);
+	if (dismantlefunc){
+		vprint("found %s dismantle function", mold_type(mv))
+		dismantlefunc(mv);
 	}
-	//vout;
-	return result;
+	free(mv);
+	vout;
+	//return result;
 }
 
+
+//--------------------------
+//-     dismantle_list()
+//--------------------------
+// purpose:  free a list of items , if one is a block, it will call dismantle_list() on its child.
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+int dismantle_list(MoldValue *mv){
+	int count=0;
+	MoldValue *next=NULL;
+	
+	vin("dismantle_list()");
+	while (mv){
+		next = mv->next;
+		dismantle(mv);
+		mv = next;
+		++count;
+	}
+	
+	vout;
+	return count;
+}
 
 
 //--------------------------
