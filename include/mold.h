@@ -11,6 +11,8 @@
 // purpose: generic typed dataset serialisation library structures and support code.
 //------------------------------------------------
 
+#pragma once
+
 //                                                                         .
 //-----------------------------------------------------------------------------------------------------------
 //
@@ -31,13 +33,12 @@ enum MoldTypes {
 	MOLD_SET_WORD,
 	MOLD_LITERAL,  // use this to add literal text to the result, it can store anything. it is not decorated on mold.
 	               // once molded, it may represent several values!
+	MOLD_DECIMAL,
 
 	//----
 	// we use this to allocate method arrays.
-	MOLD_TYPE_COUNT, // 6
+	MOLD_TYPE_COUNT, // ( 8 )
 
-	// these are not yet implemented.
-	MOLD_DECIMAL,
 };
 
 //--------------------------
@@ -53,7 +54,7 @@ enum MoldActions {
 	ACTION_MOLD,      // output our data into a given char * buffer.
 	ACTION_DISMANTLE, // free memory.
 	//---
-	ACTIONS_COUNT, // 4
+	ACTIONS_COUNT, // 5
 };
 
 

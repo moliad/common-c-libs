@@ -27,22 +27,7 @@
 //
 //-----------------------------------------------------------------------------------------------------------
 
-int iii = 66;
-
 int allocated_values = 0;
-//--------------------------
-//- __mvptr:
-//
-// this will be used in expressions as a temporary pointer.
-//--------------------------
-MoldValue *__mvptr=NULL;
-
-//--------------------------
-//- __func:
-//
-// this will be used in expressions as a temporary pointer.
-//--------------------------
-void * __func=NULL;
 
 
 //data=make(Block, gg);
@@ -212,7 +197,10 @@ const char *mold_type(MoldValue* mv){
 				str = "SetWord!";
 				break;
 			case MOLD_LITERAL:
-				str = "Literal!"
+				str = "Literal!";
+				break;
+			case MOLD_DECIMAL:
+				str = "decimal!";
 				break;
 			default:
 				str = "Unknown!";
@@ -462,16 +450,64 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 // tests:
 //--------------------------
 int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
-	int result=0;
+	int sublen=0;
 
 	vin("mold_int()");
+	sublen = i32_to_charptr(mv->value, buffer, len);
+	
+	// we must null terminate since the cast functions do not.
+	if (sublen < len){
+		buffer[sublen] = 0;
+		sublen ++;
+	}else{
+		// not enough space to null terminate string... so its an error.
+		sublen = 0;
+	}
 
-	result = i32_to_charptr(mv->value, buffer, len);
-
-	vnum(result);
+	vnum(sublen);
 	vout;
-	return result;
+	return sublen;
 }
+
+
+
+//--------------------------
+//- mold_decimal()
+//--------------------------
+// purpose:  
+//
+// inputs:   
+//
+// returns:  
+//
+// notes:    
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+int mold_decimal(MoldValue *mv, char *buffer, int len, int indents ){
+	int sublen=0;
+	
+	vin("mold_decimal()");
+	sublen = double_to_charptr(mv->decimal, 8, buffer, len );
+
+	// we must null terminate since the cast functions do not.
+	if (sublen < len){
+		buffer[sublen] = 0;
+		sublen ++;
+	}else{
+		// not enough space to null terminate string... so its an error.
+		sublen = 0;
+	}
+
+	vnum(sublen);
+	vout;
+	
+	return sublen;
+}
+
+
 
 
 //--------------------------
@@ -531,8 +567,6 @@ MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
 // tests:
 //--------------------------
 MoldValue *build_int_value(MoldValue *mv, int *data, int owner){
-	int len=0;
-	char *buffer =NULL;
 	vin("build_int_value()");
 
 	if (is_int(mv)) {
@@ -682,6 +716,9 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	
 	// MOLD_LITERAL
 	build_text_based_value, NULL, NULL, mold_word, NULL,
+	
+	// MOLD_DECIMAL
+	no_op_build, NULL, NULL, mold_decimal, NULL,
 	
 };
 
@@ -913,16 +950,5 @@ MoldValue* load (char *text){
 	vout;
 	return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
