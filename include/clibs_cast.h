@@ -13,7 +13,16 @@
 
 
 //--------------------------
+//-     i64_to_charptr()
+//--------------------------
+int i64_to_charptr(long long int value, char *buffer, int len);
+
+//--------------------------
 //-     i32_to_charptr()
 //--------------------------
 int i32_to_charptr(int value, char *buffer, int len);
 
+//--------------------------
+//- double_to_charptr()
+//--------------------------
+int double_to_charptr(double value, int precision, char *buffer, int len );
