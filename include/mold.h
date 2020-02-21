@@ -29,6 +29,8 @@ enum MoldTypes {
 	MOLD_INT,
 	MOLD_WORD,
 	MOLD_SET_WORD,
+	MOLD_LITERAL,  // use this to add literal text to the result, it can store anything. it is not decorated on mold.
+	               // once molded, it may represent several values!
 
 	//----
 	// we use this to allocate method arrays.

@@ -211,6 +211,9 @@ const char *mold_type(MoldValue* mv){
 			case MOLD_SET_WORD:
 				str = "SetWord!";
 				break;
+			case MOLD_LITERAL:
+				str = "Literal!"
+				break;
 			default:
 				str = "Unknown!";
 				break;
@@ -676,6 +679,10 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 
 	// MOLD_SET_WORD
 	build_text_based_value, NULL, NULL, mold_set_word, NULL,
+	
+	// MOLD_LITERAL
+	build_text_based_value, NULL, NULL, mold_word, NULL,
+	
 };
 
 
