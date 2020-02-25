@@ -172,7 +172,7 @@ int double_to_charptr(double value, int precision, char *buffer, int len ){
 				// note that we do not ROUND(), we FLOOR() the remainer by casting to integer.
 				vprint("%.20f", remainder * 1000000000);
 				integer = remainder * pow(10, precision);
-				vnum(integer);
+				//vnum(integer);
 				count = i64_to_charptr(integer, buffer + sublen, len - sublen);
 				
 				if (count > 0){

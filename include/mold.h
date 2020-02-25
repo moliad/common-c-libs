@@ -142,7 +142,8 @@ struct MoldValue {
 			// if we are not the owner, then we just forget about the buffer
 			// and assume an external piece of code is responsible for its memory.
 			//--------------------------
-			const char *buffer;
+			char *buffer;
+			
 
 			//--------------------------
 			//-             len:

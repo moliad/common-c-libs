@@ -469,18 +469,19 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 //
 // notes:    doesn't free the list which THIS Mold value is part of.
 //
-// to do:    
+// to do:    support count for all dismantle calls and accumulate them for a grand total.
 //
 // tests:    
 //--------------------------
 void dismantle_block(MoldValue *mv){
-	int count;
+	//int count;
 	vin("dismantle_block()");
 	if (mv->child.head){
-		count = dismantle_list(mv->child.head);
+		dismantle_list(mv->child.head);
+		//count = dismantle_list(mv->child.head);
 		mv->child.head = NULL;
 		mv->child.tail = NULL;
-		vnum(count);
+		//vnum(count);
 	}
 
 	vout;
@@ -570,7 +571,7 @@ int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
 //
 // tests:
 //--------------------------
-MoldValue *build_text_based_value(MoldValue *mv, const char *data, int owner){
+MoldValue *build_text_based_value(MoldValue *mv, char *data, int owner){
 	int len=0;
 	char *buffer =NULL;
 	vin("build_text_based_value()");
@@ -983,7 +984,7 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 // tests:
 //--------------------------
 void dismantle(MoldValue *mv){
-	int result = 0;
+	//int result = 0;
 	void (*dismantlefunc)(MoldValue*);  // declare function pointer.
 
 	vin("dismantle()");
