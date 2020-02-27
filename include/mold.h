@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include "clibs-enums.h"
+
 //                                                                         .
 //-----------------------------------------------------------------------------------------------------------
 //
@@ -25,7 +27,8 @@
 // mold datatypes, we use these to access methods in the MoldMethods array.
 //--------------------------
 enum MoldTypes {
-	MOLD_NONE=0,
+	MOLD_VOID=0, // this cannot be used by most functions it implies an un-initialised value..
+	MOLD_NONE,
 	MOLD_BLOCK,
 	MOLD_TEXT,
 	MOLD_INT,
@@ -37,7 +40,23 @@ enum MoldTypes {
 
 	//----
 	// we use this to allocate method arrays.
-	MOLD_TYPE_COUNT, // ( 8 )
+	//----
+	MOLD_TYPE_COUNT, // ( 9 )
+	
+	//----
+	// SEMI-TYPES follow
+	//
+	// These are implemented using MOLD_LITERAL, but are understood in some functions ex:  cast()
+	// they cannot be used by build since the system doesn't allow mv->type as semi-types.
+	//
+	// eventually, we may use the same action functions as MOLD_LITERAL, and just support them directly,
+	// but more development is required to proof the idea.
+	//
+	// some of these may also become their own fully implemented types later on.
+	//----
+	MOLD_DATE, // (dates may also include time information... it is optional)
+	MOLD_TIME,
+	MOLD_BINARY,
 
 };
 
@@ -47,14 +66,15 @@ enum MoldTypes {
 // action names and offsets, we use these to access methods in the MoldMethods array
 //--------------------------
 enum MoldActions {
-	ACTION_BUILD=0,  // we are given native data to use to set internal data.
-	ACTION_CAST,     // convert ourself to another type. may free inner-data, doesn't allocate a new MoldValue.
-	               // return NULL if cast destination is not possible.
-	ACTION_APPEND,    // add data to ourself (may be impossible, in which case we return NULL).
-	ACTION_MOLD,      // output our data into a given char * buffer.
-	ACTION_DISMANTLE, // free memory.
+	ACTION_BUILD=0,		// we are given native data to use to set internal data.
+	ACTION_CAST,		// convert ourself to another type. may free inner-data, may allocate and return a new MoldValue.
+						// return NULL if cast destination is not possible.
+	ACTION_APPEND,  	// add data to ourself (may be impossible, in which case we return NULL).
+	ACTION_MOLD,    	// output our data into a given char * buffer.
+	ACTION_DISMANTLE,	// free memory.
+	
 	//---
-	ACTIONS_COUNT, // 5
+	ACTIONS_COUNT,		// 5
 };
 
 
@@ -198,6 +218,18 @@ extern void *__func;
 //-                                                                                                       .
 //-----------------------------------------------------------------------------------------------------------
 //
+//- HELPER FUNCTIONS
+//
+//-----------------------------------------------------------------------------------------------------------
+//--------------------------
+//-     mold_type()
+//--------------------------
+const char *mold_type(MoldValue* mv);
+	
+
+//-                                                                                                       .
+//-----------------------------------------------------------------------------------------------------------
+//
 //- ACTION FUNCTION ENTRY POINTS
 //
 //-----------------------------------------------------------------------------------------------------------
@@ -216,22 +248,21 @@ MoldValue *build(int type, void *data);
 
 
 //--------------------------
+//-     frame()
+//--------------------------
+MoldValue *frame(int type, void *data);
+
+
+//--------------------------
 //-     mold()
 //--------------------------
-// purpose:  converts the given value to a string within the given buffer.
-//
-// inputs:
-//
-// returns:  number of chars appended to buffer (always bound by given buffer_size)
-//
-// notes:    - before calling mold, be sure to increase pointer to buffer and decrease buffer_size as you call mold on a list of values.
-//           - mold is safe for use recursively (we supply all contextual values on stack).
-//
-// to do:
-//
-// tests:
-//--------------------------
 int mold(MoldValue *value, char *buffer, int buffer_size, int indents);
+
+
+//--------------------------
+//-     cast()
+//--------------------------
+MoldValue *cast(MoldValue *mv,  int new_type, cbool clone);
 
 
 //--------------------------
@@ -250,6 +281,7 @@ MoldValue* load (char *text);
 //-     dismantle()
 //--------------------------
 void dismantle(MoldValue *mv);
+
 
 //--------------------------
 //-     dismantle_list()

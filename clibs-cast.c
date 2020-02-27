@@ -13,8 +13,17 @@
 
 #define VERBOSE
 #include "vprint.h"
-#include "clibs_cast.h"
+#include "clibs-cast.h"
+#include "clibs-errors.h"
 #include <math.h>
+
+
+//-                                                                                                       .
+//-----------------------------------------------------------------------------------------------------------
+//
+//- SCALAR TO TEXT
+//
+//-----------------------------------------------------------------------------------------------------------
 
 //--------------------------
 //-     i64_to_charptr()
@@ -187,3 +196,75 @@ int double_to_charptr(double value, int precision, char *buffer, int len ){
 	return count;
 }
 
+
+
+
+//-                                                                                                       .
+//-----------------------------------------------------------------------------------------------------------
+//
+//- TEXT TO SCALAR
+//
+//-----------------------------------------------------------------------------------------------------------
+
+
+//--------------------------
+//- charptr_to_i32()
+//--------------------------
+// purpose:  
+//
+// inputs:   len is number of digits in text, excluding null termination. rval is an address to store the result value.
+//
+// returns:  an error number from the clibs_error_array.
+//
+// notes:    - null termination is not required. we use len exclusively, and will jum.
+//           - we assume ascii compatible string (utf8 is ok, as long as no BOM is present at head of text)
+//           - if we get a value outside +/- ((2^31) - 1) , result is undefined, probably a cpu overflow exception or a circular value modification.  
+//           - use a function to detect if value is within bounds BEFORE calling us.
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+int charptr_to_i32( char *text, int len, int *rval ){
+	int 	value = 0;
+	int		sign= 1; 
+	int		i=0;
+	int		error=SUCCESS;
+	int		digit=0;
+	
+	
+	vin("charptr_to_i32()");
+	vstr(text);
+	vnum(len);
+	
+	if (len < 1){
+		error = ERR_CLIB_CAST_EMPTY_STRING;
+	}
+	if (text[0] == '-'){
+		if(len < 2){
+			error = ERR_CLIB_CAST_EMPTY_STRING;
+		}
+		sign = -1;
+		++text; // skip first char
+		--len ; // reduce length.
+	}
+	
+	for(i=0; i < len; i++){
+		vnum(i);
+		vnum(len - i - 1);
+		digit = (text[len - i - 1] - 48);
+		vnum(digit);
+		
+		if (digit < 0 || digit > 9){
+			error = ERR_CLIB_CAST_INVALID_SRC_VALUE;
+			break;
+		}
+		value += pow(10, len - i - 1) * digit;
+	}
+	
+	value = value * sign;
+	*rval = value;
+	
+	vout;
+	return error;
+}

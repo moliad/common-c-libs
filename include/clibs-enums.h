@@ -10,6 +10,9 @@
 //
 // purpose: project-agnostic low-level defines usable in any C source file, used by most other files in this repository.
 //------------------------------------------------
+#pragma once
+
+
 
 //                                                                         .
 //-----------------------------------------------------------------------------------------------------------
@@ -17,8 +20,12 @@
 //- LITERALS
 //
 //-----------------------------------------------------------------------------------------------------------
-#define TRUE  1
-#define FALSE 0
+enum cbool {
+	CFALSE,
+	CTRUE,
+};
+
+typedef enum cbool cbool;
 
 
 

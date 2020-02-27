@@ -11,14 +11,15 @@
 // purpose: generic typed dataset serialisation library functions and reference class instances
 //------------------------------------------------
 
-#include "mold.h"
 #include <stdio.h>
 #include <string.h>
 
-//#define VERBOSE
+#define VERBOSE
 #include "vprint.h"
-#include "core-defines.h"
-#include "clibs_cast.h"
+#include "clibs-enums.h"
+#include "clibs-cast.h"
+#include "mold.h"
+#include "mold-actions/cast-text.h"
 
 //-                                                                                                       .
 //-----------------------------------------------------------------------------------------------------------
@@ -56,15 +57,15 @@ int allocated_values = 0;
 //
 // tests:
 //--------------------------
-int is_series(MoldValue* mv){
-	int result=0;
+cbool is_series(MoldValue* mv){
+	int result=CFALSE;
 	//vin("is_series()");
 	switch (mv->type){
 		case MOLD_BLOCK:
-			result=1;
+			result=CTRUE;
 			break;
 		default:
-			result=0;
+			result=CFALSE;
 			break;
 	}
 	//vout;
@@ -79,7 +80,7 @@ int is_series(MoldValue* mv){
 //
 // inputs:
 //
-// returns:
+// returns:  0 or 1
 //
 // notes:
 //
@@ -95,10 +96,10 @@ int is_text_based(MoldValue *mv){
 		case MOLD_TEXT:
 		case MOLD_WORD:
 		case MOLD_SET_WORD:
-			result=1;
+			result=CTRUE;
 			break;
 		default:
-			result=0;
+			result=CFALSE;
 			break;
 	}
 	vout;
@@ -286,7 +287,7 @@ void *get_method( MoldValue *mv, int action ){
 MoldValue *no_op_build(
 	MoldValue *value,
 	void *data,
-	int owner
+	cbool owner
 ){
 	vin("no_op_build()");
 	vnum(value->type);
@@ -377,7 +378,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 	//int result=0;
 	int sublen=0;
 	MoldValue* subvalue;
-	int newline = FALSE;
+	int newline = CFALSE;
 
 	vin("mold_block()");
 
@@ -409,7 +410,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 						}
 					}
 					if (subvalue->type == MOLD_BLOCK){
-						newline = TRUE;
+						newline = CTRUE;
 					}
 					if(newline){
 						sublen += mold_indents(buffer + sublen, len - sublen, indents);
@@ -506,7 +507,7 @@ void dismantle_block(MoldValue *mv){
 //
 // tests:
 //--------------------------
-MoldValue *build_int_value(MoldValue *mv, int *data, int owner){
+MoldValue *build_int_value(MoldValue *mv, int *data, cbool owner){
 	vin("build_int_value()");
 
 	if (is_int(mv)) {
@@ -571,7 +572,7 @@ int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
 //
 // tests:
 //--------------------------
-MoldValue *build_text_based_value(MoldValue *mv, char *data, int owner){
+MoldValue *build_text_based_value(MoldValue *mv, char *data, cbool owner){
 	int len=0;
 	char *buffer =NULL;
 	vin("build_text_based_value()");
@@ -581,13 +582,13 @@ MoldValue *build_text_based_value(MoldValue *mv, char *data, int owner){
 		if (owner){
 			buffer = malloc(len + 1);
 			memcpy(buffer, data, len);
-			mv->owner = TRUE;
+			mv->owner = CTRUE;
 
 			// force null termination;
 			buffer[len] = 0;
 			mv->text.buffer = buffer;
 		}else{
-			mv->owner = FALSE;
+			mv->owner = CFALSE;
 			mv->text.buffer = data;
 		}
 		mv->text.len = len;
@@ -778,6 +779,8 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	//
 	// BUILD   CAST   APPEND   MOLD   DISMANTLE
 	//----------------
+	// MOLD_VOID
+	NULL, NULL, NULL, NULL, NULL,
 
 	// MOLD_NONE
 	no_op_build, NULL, NULL, mold_none, NULL,
@@ -786,7 +789,7 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	no_op_build, NULL, append_block, mold_block, dismantle_block,
 
 	// MOLD_TEXT
-	build_text_based_value, NULL, NULL, mold_text, dismantle_text_based_value,
+	build_text_based_value, cast_text, NULL, mold_text, dismantle_text_based_value,
 
 	// MOLD_INT
 	build_int_value, NULL, NULL, mold_int, NULL,
@@ -858,7 +861,7 @@ MoldValue *build(int type, void *data){
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
-			mv = bldfunc(mv, data, 1);
+			mv = bldfunc(mv, data, CTRUE);
 		}
 	}
 	vout;
@@ -886,12 +889,63 @@ MoldValue *frame(int type, void *data){
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
-			mv = bldfunc(mv, data, 0);
+			mv = bldfunc(mv, data, CFALSE);
 		}
 	}
 	vout;
 
 	return mv;
+}
+
+
+//--------------------------
+//-     cast()
+//--------------------------
+// purpose:  Convert mold value to a new type
+//
+// inputs:   
+//
+// returns:  mold value to use, may be copied if source type cannot cast in place.
+//
+// notes:    - by default (clone=0) we apply the change in-place.
+//           - most types can be cast to a string, but they still need an appropriate cast function.
+//           - all cast functions are in a separate source file, since the matrix of (type x type) is exponential 
+//             and will grow too big for a single file to make it easy to use in a single file.
+//           - all type-specific cast actions must not (will not) affect the given mv if an error occurs during conversion.
+//
+// to do:    
+//
+// tests:    
+//--------------------------
+MoldValue *cast(MoldValue *mv,  int new_type, cbool clone ){
+	MoldValue *result=NULL;
+	MoldValue *(* castfunc)(MoldValue *, int, int)=NULL;
+	
+	vin("cast()");
+	if (clone){
+		vprint ("not yet supported");
+		result = NULL;
+	}else{
+		if(mv->type != new_type){
+			//---
+			// try to get the cast function of destination type
+			//---
+			castfunc = get_method(mv, ACTION_CAST);
+			if (castfunc){
+				result = castfunc(mv, new_type, clone);
+			}else{
+				// unable to cast, that datatype didn't have a cast function defined yet
+				// (some datatypes cannot realistically be cast to another type).
+				result = NULL;
+			}
+		}else{
+			// nothing to do, data is already of appropriate type and clone is set to off.
+			result = mv;
+		}
+	}
+	vout;
+	
+	return result;
 }
 
 
@@ -919,7 +973,7 @@ MoldValue *append(MoldValue* series, MoldValue* value){
 	//vprint("appending value %p to series %p",value, series);
 	if (value && series){
 		if (is_series(series)) {
-
+			
 			if ((appendfunc = get_method(series, ACTION_APPEND))){
 				appendfunc(series, value);
 			}
@@ -928,7 +982,6 @@ MoldValue *append(MoldValue* series, MoldValue* value){
 	//vout;
 	return result;
 }
-
 
 
 //--------------------------
@@ -942,6 +995,7 @@ MoldValue *append(MoldValue* series, MoldValue* value){
 //
 // notes:    - before calling mold, be sure to increase pointer to buffer and decrease buffer_size as you call mold on a list of values.
 //           - mold is safe for use recursively (we supply all contextual values on stack).
+//           - MOLD_VOID actually doesn't output anything, fullfilling its role as a void "value"
 //
 // to do:
 //
@@ -955,17 +1009,13 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 
 	//vptr(value);
 	moldfunc = get_method(value, ACTION_MOLD);
-
 	if (moldfunc){
 		result = moldfunc(value, buffer, buffer_size, indents);
 	}
-	
 
 	//vout;
 	return result;
 }
-
-
 
 
 //--------------------------
@@ -977,7 +1027,7 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 //
 // returns:
 //
-// notes:
+// notes:    - after dismantle is called, the mv type is set to MOLD_VOID.
 //
 // to do:
 //
@@ -988,14 +1038,15 @@ void dismantle(MoldValue *mv){
 	void (*dismantlefunc)(MoldValue*);  // declare function pointer.
 
 	vin("dismantle()");
-
 	dismantlefunc = get_method(mv, ACTION_DISMANTLE);
-
 	if (dismantlefunc){
 		vprint("found %s dismantle function", mold_type(mv))
 		dismantlefunc(mv);
 	}
+	mv->type = MOLD_VOID; // in case someone uses a stale pointer... this may help discover it.
 	free(mv);
+	-- allocated_values;
+	
 	vout;
 	//return result;
 }
