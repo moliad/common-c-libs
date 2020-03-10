@@ -1018,6 +1018,67 @@ int mold(MoldValue *value, char *buffer, int buffer_size, int indents){
 }
 
 
+
+//--------------------------
+//-     mold_list()
+//--------------------------
+// purpose:  converts the given value list to a string.
+//
+// inputs:   when calling from the main code, set indents to 0.
+//
+// returns:  number of chars appended to buffer (always bound by given buffer_size)
+//
+// notes:    - before calling mold_list, be sure to increase pointer to buffer and decrease buffer_size as you call mold on a list of values.
+//           - mold_list() doesn't end up being used recursively since it is meant to be used only on the top level list of data...
+//           - you shouldn't use mold_list() within any action functions, instead copy and improve this code to match your custom datatype. (ex: MOLD_BLOCK)
+//
+// to do:
+//
+// tests:
+//--------------------------
+int mold_list(MoldValue *value, char *buffer, int buffer_size, int indents){
+	int result=0;
+	int (*moldfunc)(MoldValue*, char*, int, int)=NULL;  // declare function pointer.
+	int tail = 0;
+
+	vin("mold_list()");
+	//vptr(value);
+	while (value) {
+		moldfunc = get_method(value, ACTION_MOLD);
+		if (moldfunc){
+			result = moldfunc(value, buffer + tail, buffer_size - tail, indents);
+			if (result) {
+				tail += result;
+			}else{
+				vprint("mold_list() ERROR! missing space in buffer");
+			}
+		}
+		
+		if (tail < buffer_size){
+			buffer[tail] = ' ';
+			tail ++;
+		}
+		
+		// the following should never happen since the MOLD action code is NEVER supposed to overflow the buffer...
+		// application probably already crashed anyways  ;-P
+		if (tail >= buffer_size){
+			vprint ("mold_list() ERROR!  buffer overrun!");
+			result = 0;
+			value = NULL;
+		}else{
+			value = value->next;
+			result = tail;
+			buffer[tail] = 0;
+		}
+	}
+
+	vout;
+	return result;
+}
+
+
+
+
 //--------------------------
 //-     dismantle()
 //--------------------------

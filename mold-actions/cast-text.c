@@ -1,5 +1,5 @@
 //------------------------------------------------
-// file:    cast_text.c
+// file:    cast-text.c
 // author:  (C) Maxim Olivier-Adlhoch
 //
 // date:    2020-02-14
