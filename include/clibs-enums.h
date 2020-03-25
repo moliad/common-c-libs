@@ -20,12 +20,12 @@
 //- LITERALS
 //
 //-----------------------------------------------------------------------------------------------------------
-enum cbool {
-	CFALSE,
-	CTRUE,
-};
-
-typedef enum cbool cbool;
-
-
-
+//enum cbool {
+//	CFALSE,
+//	CTRUE,
+//};
+//
+//typedef enum cbool cbool;
+//
+//
+//

@@ -48,7 +48,7 @@ extern char *clibs_errors[];
 //--------------------------
 enum clibs_errors_enum  {
 	ERR_CLIB_SUCCESS=0, // not an error, all is good
-	ERR_CLIB_UNSPECIFIED=1,  // can be used as an equivalent for CTRUE in conditionals
+	ERR_CLIB_UNSPECIFIED=1,  // can be used as an equivalent for TRUE in conditionals
 	
 	// DATA CASTING ERRORS 
 	ERR_CLIB_CAST_EMPTY_STRING,

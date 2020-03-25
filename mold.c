@@ -18,6 +18,7 @@
 #include "vprint.h"
 #include "clibs-enums.h"
 #include "clibs-cast.h"
+#include "clibs-types.h"
 #include "mold.h"
 #include "mold-actions/cast-text.h"
 
@@ -58,14 +59,14 @@ int allocated_values = 0;
 // tests:
 //--------------------------
 cbool is_series(MoldValue* mv){
-	int result=CFALSE;
+	int result=FALSE;
 	//vin("is_series()");
 	switch (mv->type){
 		case MOLD_BLOCK:
-			result=CTRUE;
+			result=TRUE;
 			break;
 		default:
-			result=CFALSE;
+			result=FALSE;
 			break;
 	}
 	//vout;
@@ -96,10 +97,10 @@ int is_text_based(MoldValue *mv){
 		case MOLD_TEXT:
 		case MOLD_WORD:
 		case MOLD_SET_WORD:
-			result=CTRUE;
+			result=TRUE;
 			break;
 		default:
-			result=CFALSE;
+			result=FALSE;
 			break;
 	}
 	vout;
@@ -378,7 +379,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 	//int result=0;
 	int sublen=0;
 	MoldValue* subvalue;
-	int newline = CFALSE;
+	int newline = FALSE;
 
 	vin("mold_block()");
 
@@ -410,7 +411,7 @@ int mold_block(MoldValue* value, char *buffer, int len, int indents){
 						}
 					}
 					if (subvalue->type == MOLD_BLOCK){
-						newline = CTRUE;
+						newline = TRUE;
 					}
 					if(newline){
 						sublen += mold_indents(buffer + sublen, len - sublen, indents);
@@ -582,13 +583,13 @@ MoldValue *build_text_based_value(MoldValue *mv, char *data, cbool owner){
 		if (owner){
 			buffer = malloc(len + 1);
 			memcpy(buffer, data, len);
-			mv->owner = CTRUE;
+			mv->owner = TRUE;
 
 			// force null termination;
 			buffer[len] = 0;
 			mv->text.buffer = buffer;
 		}else{
-			mv->owner = CFALSE;
+			mv->owner = FALSE;
 			mv->text.buffer = data;
 		}
 		mv->text.len = len;
@@ -861,7 +862,7 @@ MoldValue *build(int type, void *data){
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
-			mv = bldfunc(mv, data, CTRUE);
+			mv = bldfunc(mv, data, TRUE);
 		}
 	}
 	vout;
@@ -889,7 +890,7 @@ MoldValue *frame(int type, void *data){
 		//vprint("got function!");
 		//vptr(bldfunc);
 		if (bldfunc){
-			mv = bldfunc(mv, data, CFALSE);
+			mv = bldfunc(mv, data, FALSE);
 		}
 	}
 	vout;

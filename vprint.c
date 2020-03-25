@@ -3,13 +3,13 @@
 // author:  (C) Maxim Olivier-Adlhoch
 //
 // date:    2009-11-06
-// version: 0.0.1
+// version: 1.0.0
 // 
-// license: MIT (look in main folder for full license)
+// license: APACHE v2.0
+//          https://www.apache.org/licenses/LICENSE-2.0
 //
 // purpose: a set of macros which define switchable, stacked tracing.
 //          when VDEBUG is set to false, all tracing disapears.
-//
 //------------------------------------------------
 
 #include "vprint.h"
