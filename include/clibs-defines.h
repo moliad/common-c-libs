@@ -21,8 +21,8 @@
 //-----------------------------------------------------------------------------------------------------------
 
 // these have been replaced by enum boolean  (provides better source code)
-//#define TRUE  1
-//#define FALSE 0
+#define TRUE  1
+#define FALSE 0
 
 
 

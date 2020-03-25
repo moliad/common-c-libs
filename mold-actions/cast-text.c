@@ -15,10 +15,12 @@
 #include "vprint.h"
 
 #include "clibs-cast.h"
-#include "mold.h"
+#include "clibs-mold.h"
 #include "clibs-defines.h"
 #include "clibs-enums.h"
 #include "clibs-errors.h"
+#include "clibs-types.h"
+
 
 //-                                                                                                       .
 //-----------------------------------------------------------------------------------------------------------
@@ -52,7 +54,7 @@ MoldValue *cast_text(MoldValue *mv, enum MoldTypes type, cbool clone ){
 	if (mv->type != MOLD_TEXT){
 		// error not a TEXT !!!
 		// we must not merely be of text_based_type... we need to be an actual text.
-		error=CTRUE;
+		error=TRUE;
 	}else{
 		if (clone) {
 			clonemv = make(type); // just create an empty, unbuilt mold value.
