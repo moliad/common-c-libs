@@ -19,7 +19,8 @@
 #include "clibs-enums.h"
 #include "clibs-cast.h"
 #include "clibs-types.h"
-#include "mold.h"
+#include "clibs-mold.h"
+#include "clibs-defines.h"
 #include "mold-actions/cast-text.h"
 
 //-                                                                                                       .
