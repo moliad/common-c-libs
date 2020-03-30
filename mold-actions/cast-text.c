@@ -1,5 +1,5 @@
 //------------------------------------------------
-// file:    cast_text.c
+// file:    cast-text.c
 // author:  (C) Maxim Olivier-Adlhoch
 //
 // date:    2020-02-14
@@ -15,11 +15,11 @@
 #include "vprint.h"
 
 #include "clibs-cast.h"
-#include "mold.h"
+#include "clibs-mold.h"
 #include "clibs-defines.h"
 #include "clibs-enums.h"
 #include "clibs-errors.h"
-#include "clib-types.h"
+#include "clibs-types.h"
 
 
 //-                                                                                                       .

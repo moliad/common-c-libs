@@ -14,7 +14,7 @@
 #pragma once
 
 #include "clibs-enums.h"
-#include "clib-types.h"
+#include "clibs-types.h"
 
 
 //                                                                         .
@@ -259,6 +259,12 @@ MoldValue *frame(int type, void *data);
 //-     mold()
 //--------------------------
 int mold(MoldValue *value, char *buffer, int buffer_size, int indents);
+
+
+//--------------------------
+//-     mold_list()
+//--------------------------
+int mold_list(MoldValue *value, char *buffer, int buffer_size, int indents);
 
 
 //--------------------------
