@@ -1,8 +1,8 @@
 //------------------------------------------------
-// file:    source-macros.h
+// file:    clibs-src-macros.h
 // author:  (C) Maxim Olivier-Adlhoch
 //
-// date:    2020-02-06
+// date:    2010-02-06
 // version: 1.0.0
 //
 // license: APACHE v2.0
