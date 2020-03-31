@@ -98,6 +98,7 @@ int is_text_based(MoldValue *mv){
 		case MOLD_TEXT:
 		case MOLD_WORD:
 		case MOLD_SET_WORD:
+		case MOLD_LITERAL:
 			result=TRUE;
 			break;
 		default:
@@ -720,6 +721,22 @@ int mold_set_word(MoldValue *mv, char *buffer, int len, int indents){
 	return mv->text.len + 1;
 }
 
+//-     -- LITERAL --
+//--------------------------
+//-     mold_literal()
+//--------------------------
+int mold_literal(MoldValue *mv, char *buffer, int len, int indents){
+	vin("mold_literal()");
+	vnum(len);
+	vnum(mv->text.len);
+	if (len > mv->text.len){
+		memcpy(buffer, mv->text.buffer, mv->text.len);
+		buffer[len] = 0;
+	}
+	vout;
+	return mv->text.len;
+}
+
 
 //-     -- DECIMAL --
 //--------------------------
@@ -803,7 +820,7 @@ void *MoldMethods[ ACTIONS_COUNT * MOLD_TYPE_COUNT ] = {
 	build_text_based_value, NULL, NULL, mold_set_word, dismantle_text_based_value,
 
 	// MOLD_LITERAL
-	build_text_based_value, NULL, NULL, mold_word, dismantle_text_based_value,
+	build_text_based_value, NULL, NULL, mold_literal, dismantle_text_based_value,
 
 	// MOLD_DECIMAL
 	no_op_build, NULL, NULL, mold_decimal, NULL,
@@ -1044,10 +1061,13 @@ int mold_list(MoldValue *value, char *buffer, int buffer_size, int indents){
 	int tail = 0;
 
 	vin("mold_list()");
+	vptr(buffer);
+	vnum(buffer_size);
 	//vptr(value);
 	while (value) {
 		moldfunc = get_method(value, ACTION_MOLD);
 		if (moldfunc){
+			
 			result = moldfunc(value, buffer + tail, buffer_size - tail, indents);
 			if (result) {
 				tail += result;

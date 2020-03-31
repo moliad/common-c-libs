@@ -18,7 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <conio.h>
-#include "source-macros.h"
+#include "clibs-src-macros.h"
 
 extern char verbose_indentation[];
 int verbose_indentations;
