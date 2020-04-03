@@ -49,7 +49,6 @@ MoldValue *cast_text(MoldValue *mv, enum MoldTypes type, cbool clone ){
 	MoldValue 	*clonemv = NULL;
 	int			 error=SUCCESS;
 	
-	
 	vin("cast_text()");
 	if (mv->type != MOLD_TEXT){
 		// error not a TEXT !!!
@@ -83,6 +82,19 @@ MoldValue *cast_text(MoldValue *mv, enum MoldTypes type, cbool clone ){
 				}
 				break;
 				
+//			case MOLD_DECIMAL:
+//				{
+//					double value = 0.0;
+//					error = charptr_to_double(mv->text.buffer, mv->text.len, &value);
+//				}
+//				break;
+				
+			case MOLD_LITERAL:
+				{
+					result->type = MOLD_LITERAL;
+				}
+				break;
+							
 			default:
 				error = ERR_CLIB_CAST_INCOMPATIBLE_DESTINATION_TYPE;
 				vprint("unsupported destination type");
@@ -92,6 +104,7 @@ MoldValue *cast_text(MoldValue *mv, enum MoldTypes type, cbool clone ){
 	
 	if (error){
 		vprint("ERROR! freeing cloned value before returning...");
+		
 		// any error condition MUST de-allocate its locally allocated data before exiting from its block.
 		// we do not assume to know how to handle the (dynamic, invalid?) transient data within mv here.
 		if (clonemv){
