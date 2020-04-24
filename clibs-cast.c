@@ -41,8 +41,8 @@
 //
 // tests:
 //--------------------------
-int i64_to_charptr(long long int value, char *buffer, int len){
-	int val=0;
+int i64_to_charptr(long long  value, char *buffer, int len){
+	long long val=0;
 	int count=0;
 	int i=0;
 	int remainder=0;
@@ -162,7 +162,7 @@ int double_to_charptr(double value, int precision, char *buffer, int len ){
 	vin("double_to_charptr()");
 	vprint("%.20f", value);
 
-	integer = value;              // extract the integer part of the value
+	integer = (long long)value;              // extract the integer part of the value
 	remainder = value - integer;  // extract the floating point remainder
 	
 	sublen = i64_to_charptr(integer, buffer, len);
@@ -180,7 +180,7 @@ int double_to_charptr(double value, int precision, char *buffer, int len ){
 			if (sublen < len){
 				// note that we do not ROUND(), we FLOOR() the remainer by casting to integer.
 				vprint("%.20f", remainder * 1000000000);
-				integer = remainder * pow(10, precision);
+				integer = (long long)(remainder * pow(10, precision));
 				//vnum(integer);
 				count = i64_to_charptr(integer, buffer + sublen, len - sublen);
 				
@@ -208,7 +208,7 @@ int double_to_charptr(double value, int precision, char *buffer, int len ){
 
 
 //--------------------------
-//- charptr_to_i32()
+//-     charptr_to_i32()
 //--------------------------
 // purpose:  
 //
@@ -259,7 +259,7 @@ int charptr_to_i32( char *text, int len, int *rval ){
 			error = ERR_CLIB_CAST_INVALID_SRC_VALUE;
 			break;
 		}
-		value += pow(10, len - i - 1) * digit;
+		value += (int)pow(10, len - i - 1) * digit;
 	}
 	
 	value = value * sign;
@@ -268,3 +268,4 @@ int charptr_to_i32( char *text, int len, int *rval ){
 	vout;
 	return error;
 }
+
