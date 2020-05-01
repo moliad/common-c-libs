@@ -13,10 +13,10 @@
 //          cause this code to fail miserably.
 //------------------------------------------------
 
-#include "clibs-env.h"
+#include "clibs.h"
 
 //---------------------------------------
 // just testing the clib generic warning macro
 //---------------------------------------
-COMPILER_WARNING(Testing Clibs compiler warning)
+COMPILER_WARNING(ALL COMPILATION OK)
 

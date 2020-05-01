@@ -61,7 +61,7 @@
 	//#define CLIB_ENV_LOC__ __FILE__ "(" CLIB_ENV_STRINGIFY1__(__LINE__) ") : warning Msg: "
 	#define COMPILER_WARNING(msG) __pragma(message(__FILE__ "(" CLIB_ENV_STRINGIFY1__(__LINE__) ") : warning Msg: " #msG))	
 
-#elif IS_GCC_COMPATIBLE_COMPILER 
+#elif defined(IS_GCC_COMPATIBLE_COMPILER)
 	#define CLIB_DO_PRAGMA(x) _Pragma (#x)
 	// ** NOTE THE GCC CODE BELOW IS UNTESTED **
 	//----
@@ -88,9 +88,11 @@
 //---------------------------------------
 #ifdef _WIN64 //define something for Windows (64-bit)
 	#define IS_WIN64_PLATFORM
+	#define IS_WINDOWS_PLATFORM
 	
 #elif _WIN32 //define something for Windows (32-bit)
 	#define IS_WIN32_PLATFORM
+	#define IS_WINDOWS_PLATFORM
 	
 #elif __APPLE__
     #if TARGET_IPHONE_SIMULATOR // iOS Simulator
