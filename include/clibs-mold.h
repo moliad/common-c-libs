@@ -270,7 +270,7 @@ int mold_list(MoldValue *value, char *buffer, int buffer_size, int indents);
 //--------------------------
 //-     cast()
 //--------------------------
-MoldValue *cast(MoldValue *mv,  int new_type, cbool clone);
+MoldValue *cast(MoldValue *mv,  int new_type, bool clone);
 
 
 //--------------------------

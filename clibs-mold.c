@@ -59,7 +59,7 @@ int allocated_values = 0;
 //
 // tests:
 //--------------------------
-cbool is_series(MoldValue* mv){
+bool is_series(MoldValue* mv){
 	int result=FALSE;
 	//vin("is_series()");
 	switch (mv->type){
@@ -290,7 +290,7 @@ void *get_method( MoldValue *mv, int action ){
 MoldValue *no_op_build(
 	MoldValue *value,
 	void *data,
-	cbool owner
+	bool owner
 ){
 	vin("no_op_build()");
 	vnum(value->type);
@@ -510,7 +510,7 @@ void dismantle_block(MoldValue *mv){
 //
 // tests:
 //--------------------------
-MoldValue *build_int_value(MoldValue *mv, int *data, cbool owner){
+MoldValue *build_int_value(MoldValue *mv, int *data, bool owner){
 	vin("build_int_value()");
 
 	if (is_int(mv)) {
@@ -575,7 +575,7 @@ int mold_int(MoldValue *mv, char *buffer, int len, int indents ){
 //
 // tests:
 //--------------------------
-MoldValue *build_text_based_value(MoldValue *mv, char *data, cbool owner){
+MoldValue *build_text_based_value(MoldValue *mv, char *data, bool owner){
 	int len=0;
 	char *buffer =NULL;
 	vin("build_text_based_value()");
@@ -936,7 +936,7 @@ MoldValue *frame(int type, void *data){
 //
 // tests:    
 //--------------------------
-MoldValue *cast(MoldValue *mv,  int new_type, cbool clone ){
+MoldValue *cast(MoldValue *mv,  int new_type, bool clone ){
 	MoldValue *result=NULL;
 	MoldValue *(* castfunc)(MoldValue *, int, int)=NULL;
 	

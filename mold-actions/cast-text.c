@@ -44,7 +44,7 @@
 //
 // tests:    
 //--------------------------
-MoldValue *cast_text(MoldValue *mv, enum MoldTypes type, cbool clone ){
+MoldValue *cast_text(MoldValue *mv, enum MoldTypes type, bool clone ){
 	MoldValue 	*result = NULL;
 	MoldValue 	*clonemv = NULL;
 	int			 error=SUCCESS;
