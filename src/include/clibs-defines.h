@@ -1,5 +1,5 @@
 //------------------------------------------------
-// file:    core-defines.h
+// file:    clibs-defines.h
 // author:  (C) Maxim Olivier-Adlhoch
 //
 // date:    2020-02-06
@@ -12,6 +12,7 @@
 //------------------------------------------------
 
 #pragma once
+#include "stdbool.h"
 
 //                                                                         .
 //-----------------------------------------------------------------------------------------------------------
@@ -20,9 +21,9 @@
 //
 //-----------------------------------------------------------------------------------------------------------
 
-// these have been replaced by enum boolean  (provides better source code)
-#define TRUE  1
-#define FALSE 0
+#ifndef NUL
+	#define NUL '\0'
+#endif
 
-
+#define COMMA ,
 

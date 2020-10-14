@@ -16,7 +16,7 @@
 //
 //            use the clibs_errors array like so:
 //	
-//	          clibs_errors[ERR_CLIB_SUCCESS];
+//	          clibs_errors[CLIB_ERR_SUCCESS];
 //
 //------------------------------------------------
 
@@ -47,11 +47,11 @@
 // 
 //--------------------------
 char *clibs_errors[] = {
-	"All good", //ERR_CLIB_SUCCESS=0, // not an error, all is good
-	"Unspecified error", // ERR_CLIB_UNSPECIFIED
+	"All good", //CLIB_ERR_SUCCESS=0, // not an error, all is good
+	"Unspecified error", // CLIB_ERR_UNSPECIFIED
 	
 	// DATA CASTING ERRORS 
-	"Cannot cast empty string to integer" // ERR_CLIB_CAST_EMPTY_STRING,
-	"Unable to cast value, source data is not appropriate for destination type" //	ERR_CLIB_CAST_INVALID_SRC_VALUE,
+	"Cannot cast empty string to integer" // CLIB_ERR_CAST_EMPTY_STRING,
+	"Unable to cast value, source data is not appropriate for destination type" //	CLIB_ERR_CAST_INVALID_SRC_VALUE,
 };
 

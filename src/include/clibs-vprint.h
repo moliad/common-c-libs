@@ -1,8 +1,8 @@
 //------------------------------------------------
-// file:    vprint.h
+// file:    clibs-vprint.h
 // author:  (C) Maxim Olivier-Adlhoch
 //
-// date:    2009-11-06
+// date:    2020-10-13
 // version: 1.0.0
 //
 // license: APACHE v2.0 
@@ -18,7 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <conio.h>
-#include "clibs-src-macros.h"
+#include "clibs-macros-src.h"
 
 extern char verbose_indentation[];
 int verbose_indentations;
@@ -31,30 +31,33 @@ char *vlogpath; // if set to a string, we will ALSO dump the vprinting in that f
 FILE *vlogfile;    // if vlogpath is setup, von will attempt to open it for write and dump the file ptr here.
 
 
+
 //-------
-// this just turns on the vprint.  un-comment to enable vprinting everywhere.
-// you should include this define in your make file IDE project's defines config 
-// in any target you wish to have vprint active.
+// Setup vprint activation
 //
-// you can still use the VPRINT_OFF define to deactivate it within a specific source file
+// Allows each module to choose if they wish to implement vprint separately (but its not switchable
+// after compilation).
 //
+// if you #define VERBOSE in the app's IDE or makefile, the whole app will verbose print.
+//
+// if you #define VERBOSE above, all modules of all apps will vprint.
+//
+// you can also #define VERBOSE directly within a module's .C file so that only IT enables VERBOSITY...
+//
+// you can use the VPRINT_OFF define to deactivate it within a specific source file, 
+// VPRINT_OFF has precedence over VERBOSE, so it will cancel vprinting, even if enabled globally.
+//
+// REMEMBER to setup verbosity BEFORE loading the VPRINT headers.
+//
+// ALSO REMEMBER that you need to add the clibs-vprint.c file to your project to link its object file.
+//
+// whatever you do, they still all share the same vprint indentation stack.
+//-------
 // #ifnef VERBOSE
 //     #define VERBOSE
 // #endif
 //-------
 
-
-// DEFINING it this way, allows each module to choose if they wish to implement vprint separately (but its not switchable
-// after compilation).
-//
-// if you #define VERBOSE in the app, only the app will verbose print.
-//
-// if you #define VERBOSE above, all modules will switch
-//
-// you can also #define VERBOSE directly within a module's C file so that only IT enables VERBOSITY...
-//
-// whatever you do, they still all share the same vprint indentation stack.
-// note that if you
 #ifndef VERBOSE
 	#define IS_NOT_VPRINTING
 #else
@@ -67,9 +70,20 @@ FILE *vlogfile;    // if vlogpath is setup, von will attempt to open it for writ
 
 
 //--------------------------
+//- FLUSH_STDIO
+//
+// Uncomment the following line to trigger unbuffered i/o for vprint, 
+// we will flush the buffer after each vprint call.
+//--------------------------
+#define FLUSH_STDIO
+//--------------------------
+
+
+
+//--------------------------
 //-  BUFFERED_VLOG
 //
-// define the following in your make files or projects, to allow FAST logging.
+// define the following in your make files or projects, to allow FAST DISK logging.
 //
 // this is off by default because we need the vlogs to flush at each call to vprint
 // otherwise, the data within the i/o buffer doesn't get flushed to disk when an
@@ -79,7 +93,7 @@ FILE *vlogfile;    // if vlogpath is setup, von will attempt to open it for writ
 // MUCH faster (basically speed of disk), in cases where you want to trace a
 // non-crashing, but very long trace without waiting hours for it.
 //
-// this is especially true when the stonedb error mechanism is being used.
+// this is especially true when the large loops are being used.
 //
 // #define BUFFERED_VLOG
 //--------------------------
@@ -101,6 +115,7 @@ FILE *vlogfile;    // if vlogpath is setup, von will attempt to open it for writ
 	#define vin(...) // nothing is printed.
 	#define vprint(...) // nothing is printed.
 	#define vprin(...) // nothing is printed.
+	#define vline(...)
 	#define vnum(...)
 	#define vstr(...)
 	#define vchar(...)
@@ -123,6 +138,13 @@ FILE *vlogfile;    // if vlogpath is setup, von will attempt to open it for writ
 #ifdef IS_VPRINTING
 	//COMPILER_WARNING(is vprinting!!)
 
+	// the following are exclusively used if/when a file log is setup
+	#if defined(FLUSH_STDIO)
+		#define vflush() fflush(stdout)
+	#else
+		#define vflush() () // empty expression
+	#endif
+
 	#define if_verbose(expr) if (do_verbose != 0){expr}
 	#define if_vlog(expr) if ((do_vlog != 0) && (vlogfile != NULL)){expr}
 
@@ -130,14 +152,15 @@ FILE *vlogfile;    // if vlogpath is setup, von will attempt to open it for writ
 	#define vdetab()    {verbose_indentations-- ; update_verbose_indentations();}
 	#define vreset()    {verbose_indentations = 0 ; update_verbose_indentations();}
 
-	#define vindent()   if_verbose( printf("%s",verbose_indentation);)                if_vlog ( fprintf(vlogfile, "%s",verbose_indentation);               )
-	#define vin(...)    vindent(); if_verbose( printf(__VA_ARGS__); printf(" [\n");)  if_vlog ( fprintf(vlogfile, __VA_ARGS__); fprintf(vlogfile, " [\n"); ) ventab()
-	#define vprint(...) vindent(); if_verbose( printf(__VA_ARGS__); printf("\n");)    if_vlog ( fprintf(vlogfile, __VA_ARGS__); fprintf(vlogfile, "\n");  fflush(vlogfile); )
-	#define vprin(...)  if_verbose( printf(__VA_ARGS__); )                            if_vlog ( fprintf(vlogfile, __VA_ARGS__);                            )
+	#define vindent()   if_verbose( printf("%s",verbose_indentation);) if_vlog ( fprintf(vlogfile, "%s",verbose_indentation);               )
+	#define vin(...)    vindent(); if_verbose( printf(__VA_ARGS__); printf(" [\n");) vflush(); if_vlog ( fprintf(vlogfile, __VA_ARGS__); fprintf(vlogfile, " [\n"); ) ventab()
+	#define vprint(...) vindent(); if_verbose( printf(__VA_ARGS__); printf("\n");) vflush(); if_vlog ( fprintf(vlogfile, __VA_ARGS__); fprintf(vlogfile, "\n");  fflush(vlogfile); )
+	#define vline()     vprint("\n")
+	#define vprin(...)  if_verbose( printf(__VA_ARGS__); ) vflush(); if_vlog ( fprintf(vlogfile, __VA_ARGS__);                            )
 	#define vnum(var)   vprint( QUOTE(var) ": %d", var)
 	#define vstr(var)   vprint( QUOTE(var) ": %s", var)
 	#define vchar(var)   vprint( QUOTE(var) ": %c", var)
-	#define vhex(var)   vprint( QUOTE(var) ": %.8X", var);
+	#define vhex(var)   vprint( QUOTE(var) ": %.8X", var)
 
 //	#ifdef IS_64BIT_BUILD
 //		#define vptr(var)   vprint( QUOTE(var) ": %.16x", (unsigned long long int )var);

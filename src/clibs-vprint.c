@@ -1,8 +1,8 @@
 //------------------------------------------------
-// file:    vprint.c
+// file:    clibs-vprint.c
 // author:  (C) Maxim Olivier-Adlhoch
 //
-// date:    2009-11-06
+// date:    2020-10-13
 // version: 1.0.0
 // 
 // license: APACHE v2.0
@@ -12,7 +12,7 @@
 //          when VDEBUG is set to false, all tracing disapears.
 //------------------------------------------------
 
-#include "vprint.h"
+#include "clibs-vprint.h"
 
 char verbose_indentation[verbose_array_size] = {0}; // = "";
 int verbose_indentations   =  0;

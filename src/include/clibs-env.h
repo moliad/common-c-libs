@@ -75,6 +75,56 @@
 
 
 
+//---------------------------------------
+//-  BIT DEPTH OF COMPILER/PLATFORM/CPU
+//---------------------------------------
+#ifdef IS_MSVC_COMPILER
+  #if _WIN32 || _WIN64
+     #if _WIN64 // checking only _WIN32 is useless since it is also defined for _WIN64
+       #define IS_64BIT_BUILD
+    #else
+      #define IS_32BIT_BUILD
+    #endif
+  #endif
+#endif
+
+
+#ifdef IS_GCC_COMPATIBLE_COMPILER
+  #if __x86_64__ || __ppc64__
+    #define IS_64BIT_BUILD
+  #else
+    #define IS_32BIT_BUILD
+  #endif
+#endif
+
+
+
+//------------------
+// SIMPLE RUN_TIME CHECK TO ENFORCE BIT DEPTH OF PLATFORM... 
+// WHEN unknown, its probably because platform is not yet ported.
+//
+// uncomment to enable the check at run time (temporarily)
+//------------------
+//#ifdef IS_64BIT_BUILD
+//    if (sizeof(void*) != 8){
+//        printf("IS_64BIT_BUILD: Error: pointer should be 8 bytes. Exiting.");
+//        exit(0);
+//    }
+//    printf("Diagnostics: we are running in 64-bit mode.\n");
+//#elif defined (IS_32BIT_BUILD)
+//    if (sizeof(void*) != 4){
+//        printf("IS_32BIT_BUILD: Error: pointer should be 4 bytes. Exiting.");
+//        exit(0);
+//    }
+//    printf("Diagnostics: we are running in 32-bit mode.\n");
+//#else
+//    #error "Must define either IS_32BIT_BUILD or IS_64BIT_BUILD"
+//#endif
+//
+//---------------------------------------
+
+
+
 
 
 //---------------------------------------

@@ -1,8 +1,8 @@
 //------------------------------------------------
-// file:    clibs-src-macros.h
+// file:    clibs-macros-src.h
 // author:  (C) Maxim Olivier-Adlhoch
 //
-// date:    2010-02-06
+// date:    2020-10-13
 // version: 1.0.0
 //
 // license: APACHE v2.0
@@ -11,10 +11,12 @@
 // purpose: Core macros used by other basic includes to manage source code.
 //------------------------------------------------
 
+#pragma once
+
 //                                                                         .
 //-----------------------------------------------------------------------------------------------------------
 //
-//- SOURCE QUOTING MACROS
+//- SOURCE QUOTING  MACROS
 //
 //-----------------------------------------------------------------------------------------------------------
 #define STRINGIFY(s) XSTR__(s)
